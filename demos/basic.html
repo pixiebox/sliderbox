@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SliderBox</title>
+    <meta http-equiv="content-type" content="text/html;charset=UTF-8"/>
+	<meta name="viewport" content="width=device-width">
+
+    <script type="text/javascript" src="../js/libs/jquery-1.9.1.min.js"></script>
+    <script type="text/javascript" src="../js/sliderBox.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="../css/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/bootstrap/bootstrap-theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/sliderBox.min.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style.css" />
+</head>
+<body class="container">
+	<h1>SliderBox jQuery Plugin - basic demo</h1>
+
+	<hr />
+
+	<div class="row clearfix">
+		<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+			<div class="clearfix title">
+				<strong>Basic slider</strong>
+				<a class="addSlide btn btn-primary" href="#"><i class="glyphicon glyphicon-plus"></i> Add slide</a>
+			</div>
+
+			<div class="sliderbox" id="sliderbox-1">
+				<a href="#" class="prev" rel="prev">&lsaquo;</a>
+				<a href="#" class="next" rel="next">&rsaquo;</a>
+
+				<div class="clearfix placeholder">
+					<div class="item">
+						<img src="../img/file000693070568.jpg" alt="file000693070568.jpg" />
+					</div>
+
+					<div class="item">
+						<p>
+							Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+							Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+							when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+							It has survived not only five centuries, but also the leap into electronic typesetting,
+							remaining essentially unchanged.
+							It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
+							and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+						</p>
+						<img src="../img/file000698862236.jpg" alt="file000698862236.jpg" />
+					</div>
+
+					<div class="item">
+						<p>
+							Lorem Ipsum is simply dummy text of the printing and typesetting industry.
+							Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+							when an unknown printer took a galley of type and scrambled it to make a type specimen book.
+							It has survived not only five centuries, but also the leap into electronic typesetting,
+							remaining essentially unchanged.
+							It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages,
+							and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.
+						</p>
+					</div>
+
+					<div class="item">
+						<img src="../img/file000738769552.jpg" alt="file000738769552.jpg">
+					</div>
+					
+					<div class="item">
+						<img src="../img/file000844922903.jpg" alt="file000844922903.jpg" />
+						<p>I am a slide.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		$('#sliderbox-1').sliderBox();
+
+		$('.addSlide').click(function (e) {
+			e.preventDefault();
+
+			$(this).parent().parent().find('.sliderbox').data('SliderBox').addSlides([
+				{
+					img : {
+						src : 'file000698862236.jpg',
+						folder :'../img/'
+					}
+				},
+				/* ... more slides
+				{
+					img : {
+						src : 'file000738769552.jpg',
+						folder :'/assets/sliderBox/img/{folder}/'
+					}
+					, description : 'Lorem Ipsum'
+				}
+				*/
+			]);
+		});
+	</script>
+	<script type="text/javascript">
+		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		ga('create', 'UA-57655395-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+</body>
+</html>

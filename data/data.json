@@ -1,0 +1,32 @@
+{
+	"slides" : [
+		{
+			"image" : {
+				"img" : "file000693070568.jpg",
+				"path" : "img/{breakpoint-name}/"
+			},
+			"description" : "I am a slide."
+		},
+		{
+			"image" : {
+				"img" : "file000698862236.jpg",
+				"path" : "img/{breakpoint-name}/"
+			},
+			"description" : "I am a slide."
+		},
+		{
+			"image" : {
+				"img" : "file000738769552.jpg",
+				"path" : "img/{breakpoint-name}/"
+			},
+			"description" : "I am a slide."
+		},
+		{
+			"image" : {
+				"img" : "file000844922903.jpg",
+				"path" : "img/{breakpoint-name}/"
+			},
+			"description" : "I am a slide."
+		},
+	]
+}
