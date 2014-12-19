@@ -89,7 +89,7 @@
 											? breakpoint.maxWidth
 											: (breakpoint.folder - 0);
 					elemWidth 			= carousel.parent().width();
-					placeholder 		= carousel.find('.placeholder');
+					placeholder 		= $('.placeholder', carousel);
 					elSlides 			= $('.item', placeholder);
 					settingBreakpoint 	= false;
 
@@ -106,7 +106,9 @@
 							  , attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
 							  , slideImg 			= elSlide.find('img');
 
-							if (slideImg.length && typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
+							if (slideImg.length
+							&& typeof attrDataBreakpoint !== 'undefined'
+							&& attrDataBreakpoint !== false) {
 								if (index === options.currentSlide) {
 									slideImg.one('load', function () {
 										elemHeight = elSlide.outerHeight();
@@ -153,7 +155,9 @@
 				while (_breakpoint = breakpoints[i]) {
 					minWidth = _breakpoint['minWidth'];
 					maxWidth = _breakpoint['maxWidth'];
-					minDpr   = 'minDevicePixelRatio' in _breakpoint ? _breakpoint['minDevicePixelRatio'] : 0;
+					minDpr   = 'minDevicePixelRatio' in _breakpoint
+									? _breakpoint['minDevicePixelRatio']
+									: 0;
 
 					// Viewport width found
 					if (vWidth > 0) {
@@ -227,8 +231,8 @@
 							viewPortWidth 	= SliderBox.getViewportWidthInCssPixels()
 							breakpoint 		= SliderBox.getBreakpoint(settings.breakpoints, viewPortWidth)
 							breakpointVal 	= 'minDevicePixelRatio' in breakpoint
-								? breakpoint.maxWidth
-								: (breakpoint.folder - 0);
+												? breakpoint.maxWidth
+												: (breakpoint.folder - 0);
 						}
 
 						for (var i = 0; i < jsonData.length; i++) {
@@ -300,13 +304,19 @@
 
 					switch (direction) {
 						case 'prev':
-							options.currentSlide = options.currentSlide == 0 ? last : options.currentSlide - 1;
+							options.currentSlide = options.currentSlide == 0
+								? last
+								: options.currentSlide - 1;
+
 							moveTo = {
 								marginLeft: -(carouselWidth * options.currentSlide)
 							};
 							break;
 						case 'next':
-							options.currentSlide = options.currentSlide == last ? 0 : options.currentSlide + 1;
+							options.currentSlide = options.currentSlide == last
+								? 0
+								: options.currentSlide + 1;
+
 							moveTo = {
 								marginLeft: -(carouselWidth * options.currentSlide)
 							};
@@ -450,6 +460,7 @@
 					e.preventDefault();
 
 					var num = $(e.currentTarget).index();
+
 					moveToSlide('goto', num);
 				});
 
@@ -464,6 +475,7 @@
 				} else {
 					carousel.on('click', '.prev, .next', function (e) {
 						e.preventDefault();
+
 						carousel.data('SliderBox').stopAuto();
 						moveToSlide(this.rel);
 					});
