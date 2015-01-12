@@ -85,9 +85,7 @@
 				if (!carousel.data('busyAnimating')) {
 					viewPortWidth 		= this.getViewportWidthInCssPixels();
 					breakpoint 			= this.getBreakpoint(options.breakpoints, viewPortWidth);
-					breakpointVal 		= 'minDevicePixelRatio' in breakpoint
-											? breakpoint.maxWidth
-											: (breakpoint.folder - 0);
+					breakpointVal 		= breakpoint.folder - 0;
 					elemWidth 			= carousel.parent().width();
 					placeholder 		= $('.placeholder', carousel);
 					elSlides 			= $('.item', placeholder);
@@ -228,11 +226,9 @@
 						  , firstAdded;
 
 						if ('breakpoints' in settings) {
-							viewPortWidth 	= SliderBox.getViewportWidthInCssPixels()
-							breakpoint 		= SliderBox.getBreakpoint(settings.breakpoints, viewPortWidth)
-							breakpointVal 	= 'minDevicePixelRatio' in breakpoint
-												? breakpoint.maxWidth
-												: (breakpoint.folder - 0);
+							viewPortWidth 	= SliderBox.getViewportWidthInCssPixels();
+							breakpoint 		= SliderBox.getBreakpoint(settings.breakpoints, viewPortWidth);
+							breakpointVal 	= breakpoint.folder - 0;
 						}
 
 						for (var i = 0; i < jsonData.length; i++) {
@@ -460,7 +456,6 @@
 					e.preventDefault();
 
 					var num = $(e.currentTarget).index();
-
 					moveToSlide('goto', num);
 				});
 
@@ -475,7 +470,6 @@
 				} else {
 					carousel.on('click', '.prev, .next', function (e) {
 						e.preventDefault();
-
 						carousel.data('SliderBox').stopAuto();
 						moveToSlide(this.rel);
 					});

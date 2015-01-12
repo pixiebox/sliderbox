@@ -1,5 +1,13 @@
+strong {
+	display: inline-block;
+	line-height: 52px;
+}
+a.btn {
+	font-size: 18px;
+}
 .row,
-.addSlide {
+a.btn,
+.popup {
 	margin-bottom: 14px;
 }
 .title strong {
@@ -7,7 +15,6 @@
 }
 .title .addSlide {
 	float: right;
-	font-size: 18px;
 }
 .clearfix:before,
 .clearfix:after {
