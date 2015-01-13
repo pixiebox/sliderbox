@@ -6,7 +6,7 @@
 	  , settingBreakpoint 			= false
 	  , supportsOrientationChange 	= 'ontouchstart' in window
 	  , orientationEvent 			= supportsOrientationChange ? 'orientationchange' : 'resize'
-	  , devicePixelRatio 			= window.devicePixelRatio || 1
+	  , devicePixelRatio 			= 'devicePixelRatio' in window ? window.devicePixelRatio : 1
 	  // General functions
       , SliderBox = {
 			// underscore debounce function
@@ -87,7 +87,7 @@
 					breakpoint 			= this.getBreakpoint(options.breakpoints, viewPortWidth);
 					breakpointVal 		= breakpoint.folder - 0;
 					elemWidth 			= carousel.parent().width();
-					placeholder 		= $('.placeholder', carousel);
+					placeholder 		= carousel.find('.placeholder');
 					elSlides 			= $('.item', placeholder);
 					settingBreakpoint 	= false;
 
@@ -153,9 +153,7 @@
 				while (_breakpoint = breakpoints[i]) {
 					minWidth = _breakpoint['minWidth'];
 					maxWidth = _breakpoint['maxWidth'];
-					minDpr   = 'minDevicePixelRatio' in _breakpoint
-									? _breakpoint['minDevicePixelRatio']
-									: 0;
+					minDpr   = 'minDevicePixelRatio' in _breakpoint ? _breakpoint['minDevicePixelRatio'] : 0;
 
 					// Viewport width found
 					if (vWidth > 0) {
@@ -300,19 +298,13 @@
 
 					switch (direction) {
 						case 'prev':
-							options.currentSlide = options.currentSlide == 0
-								? last
-								: options.currentSlide - 1;
-
+							options.currentSlide = options.currentSlide == 0 ? last : options.currentSlide - 1;
 							moveTo = {
 								marginLeft: -(carouselWidth * options.currentSlide)
 							};
 							break;
 						case 'next':
-							options.currentSlide = options.currentSlide == last
-								? 0
-								: options.currentSlide + 1;
-
+							options.currentSlide = options.currentSlide == last ? 0 : options.currentSlide + 1;
 							moveTo = {
 								marginLeft: -(carouselWidth * options.currentSlide)
 							};
