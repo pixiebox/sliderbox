@@ -8,10 +8,10 @@ Slider Box is a very basic jQuery slider that supports
 * adding slides dynamicly
 
 ### Support
-* Documentation http://pixiebox.com/code/sliderbox/docs
+* Documentation http://pixiebox.com/code/docs/sliderbox
 * Submit an issue - https://github.com/pixiebox/sliderbox/issues
 
 ### Demo
-* http://pixiebox.com/code/sliderbox/basic
-* http://pixiebox.com/code/sliderbox/breakpoints
-* http://pixiebox.com/code/sliderbox/ajax
+* http://pixiebox.com/code/demo/sliderbox-basic
+* http://pixiebox.com/code/demo/sliderbox-breakpoints
+* http://pixiebox.com/code/demo/sliderbox-ajax
