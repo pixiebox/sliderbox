@@ -27,7 +27,37 @@
 					if (callNow) func.apply(context, args);
 				};
 			}
+			, maxHeight : function maxHeight () {
+				var i 				= 0
+				  , math 			= Math
+				  , screenHeight 	= window.screen.height
+				  , heights 		= [
+						window.innerHeight
+					  , window.document.documentElement.clientHeight
+					  , window.document.documentElement.offsetHeight
+					  , window.document.body.clientHeight
+					]
+				  , height;
 
+				for (; i < heights.length; i++) {
+					// If not a number remove it
+					if (isNaN(heights[i])) {
+						heights.splice(i, 1);
+						i--;
+					}
+				}
+
+				if (heights.length) {
+					height = math.max.apply(math, heights);
+
+					// Catch cases where the viewport is wider than the screen
+					if (!isNaN(screenHeight)) {
+						height = math.min(screenHeight, height);
+					}
+				}
+
+				return height || screenHeight || 0;
+			}
 			 /*
 			 * Returns the layout viewport width in CSS pixels.
 			 * To achieve a precise result the following meta must be included at least:
@@ -38,7 +68,7 @@
 			 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
 			 */
 			, getViewportWidthInCssPixels : function getViewportWidthInCssPixels() {
-				var  i 			= 0
+				var i 			= 0
 				  , math 		= Math
 				  , screenWidth = window.screen.width
 				  , widths 		= [
@@ -87,7 +117,7 @@
 					breakpoint 			= this.getBreakpoint(options.breakpoints, viewPortWidth);
 					breakpointVal 		= breakpoint.folder - 0;
 					elemWidth 			= carousel.parent().width();
-					placeholder 		= carousel.find('.placeholder');
+					placeholder 		= $('.placeholder', carousel);
 					elSlides 			= $('.item', placeholder);
 					settingBreakpoint 	= false;
 
@@ -107,32 +137,21 @@
 							if (slideImg.length
 							&& typeof attrDataBreakpoint !== 'undefined'
 							&& attrDataBreakpoint !== false) {
-								if (index === options.currentSlide) {
-									slideImg.one('load', function () {
-										elemHeight = elSlide.outerHeight();
-										carousel.height(elemHeight);
-									});
-								}
-
 								slideImg.attr('src',
 									('path' in options && options.path === 'absolute' ? '/' : '')
 									+ attrDataBreakpoint
 										.replace('{folder}', breakpointVal)
 									+ this.getAttribute('data-img')
 								);
-							} else if (index === options.currentSlide) {
-								elemHeight = elSlide.outerHeight();
-								carousel.height(elemHeight);
 							}
 						});
 					
 						options.currentBreakpoint = breakpointVal;
 						carousel.data('options', options);
-					} else {
-						elemHeight = elSlides.eq(options.currentSlide).outerHeight();
-						carousel.height(elemHeight);
 					}
-					
+
+					carousel.css('maxHeight', SliderBox.maxHeight())
+
 					if (options.auto) carousel.data('SliderBox').startAuto();
 				} else {
 					setTimeout(function () {

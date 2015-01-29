@@ -5,7 +5,8 @@
 	overflow: hidden;
 	position: relative;
 }
-.sb-template{
+.sb-template {
+	box-shadow: 0px 10px 40px rgba(0,0,0,0.5);
 	bottom: 0;
 	left: 0;
 	margin: auto;
