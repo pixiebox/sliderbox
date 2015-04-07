@@ -27,37 +27,7 @@
 					if (callNow) func.apply(context, args);
 				};
 			}
-			, maxHeight : function maxHeight () {
-				var i 				= 0
-				  , math 			= Math
-				  , screenHeight 	= window.screen.height
-				  , heights 		= [
-						window.innerHeight
-					  , window.document.documentElement.clientHeight
-					  , window.document.documentElement.offsetHeight
-					  , window.document.body.clientHeight
-					]
-				  , height;
 
-				for (; i < heights.length; i++) {
-					// If not a number remove it
-					if (isNaN(heights[i])) {
-						heights.splice(i, 1);
-						i--;
-					}
-				}
-
-				if (heights.length) {
-					height = math.max.apply(math, heights);
-
-					// Catch cases where the viewport is wider than the screen
-					if (!isNaN(screenHeight)) {
-						height = math.min(screenHeight, height);
-					}
-				}
-
-				return height || screenHeight || 0;
-			}
 			 /*
 			 * Returns the layout viewport width in CSS pixels.
 			 * To achieve a precise result the following meta must be included at least:
@@ -68,7 +38,7 @@
 			 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
 			 */
 			, getViewportWidthInCssPixels : function getViewportWidthInCssPixels() {
-				var i 			= 0
+				var  i 			= 0
 				  , math 		= Math
 				  , screenWidth = window.screen.width
 				  , widths 		= [
@@ -130,28 +100,37 @@
 
 					if (breakpointVal !== options.currentBreakpoint) {
 						elSlides.each(function (index, el) {
-							var elSlide = $(el) // todo test of $(el) gewoon el kan worden
+							var elSlide			 	= $(el)
 							  , attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
 							  , slideImg 			= elSlide.find('img');
 
-							if (slideImg.length
-							&& typeof attrDataBreakpoint !== 'undefined'
-							&& attrDataBreakpoint !== false) {
+							if (slideImg.length && typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
+								if (index === options.currentSlide) {
+									slideImg.one('load', function () {
+										elemHeight = elSlide.outerHeight();
+										carousel.height(elemHeight);
+									});
+								}
+
 								slideImg.attr('src',
 									('path' in options && options.path === 'absolute' ? '/' : '')
 									+ attrDataBreakpoint
 										.replace('{folder}', breakpointVal)
 									+ this.getAttribute('data-img')
 								);
+							} else if (index === options.currentSlide) {
+								elemHeight = elSlide.outerHeight();
+								carousel.height(elemHeight);
 							}
 						});
 					
 						options.currentBreakpoint = breakpointVal;
 						carousel.data('options', options);
+					} else {
+						elemHeight = elSlides.eq(options.currentSlide).outerHeight();
+						carousel.height(elemHeight);
 					}
-
-					carousel.css('maxHeight', SliderBox.maxHeight())
-
+					
 					if (options.auto) carousel.data('SliderBox').startAuto();
 				} else {
 					setTimeout(function () {
@@ -224,8 +203,19 @@
 			  , placeholder = carousel.find('.placeholder')
 			  , defaults = {
 					auto 				: false
+				  , breakpoints : [
+						{folder: '480', maxWidth: 480}
+					  , {folder: '640', minWidth: 481, maxWidth: 767}
+					  , {folder: '900', minWidth: 748} // tablet and desktop
+					  , {folder: '1170', minWidth: 992}
+					  , {folder: '640', maxWidth: 320, minDevicePixelRatio: 2} // iPhone 4 Retina display
+					  , {folder: '1170', minWidth: 320, maxWidth: 667, minDevicePixelRatio: 2} // iPhone 5/6 Retina display
+					  , {folder: '2048', minWidth: 748, maxWidth: 1024, minDevicePixelRatio: 2} // tablet Retina display
+					  , {folder: '2048', minWidth: 414, maxWidth: 736, minDevicePixelRatio: 3} // iPhone 6 PLUS Retina display
+					]
 				  , currentSlide 		: 0
 				  , currentBreakpoint 	: 0
+				  , responsive			: false
 				  , speed 				: 500
 				}
 			  , settings = $.extend(defaults, options)
@@ -294,6 +284,9 @@
 				}
 			  , self = this;
 
+			if ('breakpoints' in options && !('responsive' in options))
+				settings.responsive = true;
+			
 			//
 			// Cache data to each carousel
 			carousel.data({
@@ -445,7 +438,7 @@
 			}
 
 			function init () {
-				if ('breakpoints' in settings
+				if (settings.responsive
 				&& settings.breakpoints.constructor === Array
 				&& settings.breakpoints.length) {
 					SliderBox.setBreakpoint(carousel);
@@ -517,7 +510,7 @@
 
 							for (key in response.slides[i]) {
 								if (key === 'image') {
-									if ('breakpoints' in settings) {
+									if (settings.responsive) {
 										$clone.attr('data-breakpoint', response.slides[i]['image'].path)
 											.attr('data-img',  response.slides[i]['image'].img);
 									} else {
