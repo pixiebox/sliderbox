@@ -448,7 +448,7 @@
 						var items =  $('.item', carousel)
 						  , elemHeight = items.height()
 						  , itemWidth = carousel.width()
-						  , placeholderWidth = items.length * carousel.width();
+						  , placeholderWidth = items.length * itemWidth;
 
 						carousel.height(elemHeight);
 						items.width(itemWidth);
