@@ -508,7 +508,7 @@
 						for (var i = 0; i < response.slides.length; i++) {
 							$clone = elClone.clone();
 
-							for (key in response.slides[i]) {
+							for (var key in response.slides[i]) {
 								if (key === 'image') {
 									if (settings.responsive) {
 										$clone.attr('data-breakpoint', response.slides[i]['image'].path)
