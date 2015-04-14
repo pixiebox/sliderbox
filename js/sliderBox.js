@@ -2,8 +2,7 @@
 	//
 	// Variables
 	//
-	var collection = []
-	  , settingBreakpoint 			= false
+	var settingBreakpoint 			= false
 	  , supportsOrientationChange 	= 'ontouchstart' in window
 	  , orientationEvent 			= supportsOrientationChange ? 'orientationchange' : 'resize'
 	  , devicePixelRatio 			= 'devicePixelRatio' in window ? window.devicePixelRatio : 1
@@ -37,7 +36,7 @@
 			 * - http://www.quirksmode.org/mobile/tableViewport.html
 			 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
 			 */
-			, getViewportWidthInCssPixels : function getViewportWidthInCssPixels() {
+		  , getViewportWidthInCssPixels : function getViewportWidthInCssPixels() {
 				var  i 			= 0
 				  , math 		= Math
 				  , screenWidth = window.screen.width
@@ -70,7 +69,7 @@
 			}
 
 			// https://gist.github.com/localpcguy/1373518
-			, setBreakpoint : function setBreakpoint(carousel) {
+		  , setBreakpoint : function setBreakpoint(carousel) {
 				var options = carousel.data('options')
 				  , breakpoint
 				  , breakpointVal
@@ -139,7 +138,7 @@
 				}
 			}
 
-			, getBreakpoint: function getBreakpoint(breakpoints, vWidth) {
+		  , getBreakpoint: function getBreakpoint(breakpoints, vWidth) {
 				var _vWidth 	= vWidth
 				   , i 			= 0
 				   , breakpoint = {}
@@ -174,24 +173,14 @@
 				return breakpoint;
 			}
 
-			, removeSlider: function removeSlider (carousel) {
-				collection.pop();
+		  , removeSlider: function removeSlider (carousel) {
 				carousel.remove();
 			}
 
-			, error: function error (msg) {
+		  , error: function error (msg) {
 				throw new Error( msg );
 			}
 		};
-
-	//
-	// Events
-	//
-	$(window).on(orientationEvent, SliderBox.debounce(function () {
-		for (var i = 0; i < collection.length; i++) {
-			SliderBox.setBreakpoint(collection[i]);
-		}
-	}, 250));
 
 	// Plugin
 	$.fn.sliderBox = function pixieboxSlider(options, callback) {
@@ -310,13 +299,13 @@
 
 					switch (direction) {
 						case 'prev':
-							options.currentSlide = options.currentSlide == 0 ? last : options.currentSlide - 1;
+							options.currentSlide = options.currentSlide === 0 ? last : options.currentSlide - 1;
 							moveTo = {
 								marginLeft: -(carouselWidth * options.currentSlide)
 							};
 							break;
 						case 'next':
-							options.currentSlide = options.currentSlide == last ? 0 : options.currentSlide + 1;
+							options.currentSlide = options.currentSlide === last ? 0 : options.currentSlide + 1;
 							moveTo = {
 								marginLeft: -(carouselWidth * options.currentSlide)
 							};
@@ -430,7 +419,6 @@
 										}
 									}
 								}
-							default:
 								break;
 						}
 					}
@@ -442,7 +430,6 @@
 				&& settings.breakpoints.constructor === Array
 				&& settings.breakpoints.length) {
 					SliderBox.setBreakpoint(carousel);
-					collection.push(carousel);				
 				} else {
 					onComplete(false, function () {
 						var items =  $('.item', carousel)
@@ -455,7 +442,12 @@
 						$('.placeholder', carousel).width(placeholderWidth);
 					});
 				}
-				
+
+				if ('onComplete' in settings) onComplete(true, settings.onComplete);
+
+				//
+				// Events
+				//
 				carousel.on('click', '.navigate', function (e) {
 					e.preventDefault();
 
@@ -479,7 +471,11 @@
 					});
 				}
 
-				if ('onComplete' in settings) onComplete(true, settings.onComplete);
+				if (settings.responsive) {
+					$(window).on(orientationEvent, SliderBox.debounce(function () {
+						SliderBox.setBreakpoint(carousel);
+					}, 250));
+				}
 			}
 
 			function reinit () {
