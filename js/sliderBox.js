@@ -106,8 +106,7 @@
 							if (slideImg.length && typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
 								if (index === options.currentSlide) {
 									slideImg.one('load', function () {
-										elemHeight = elSlide.outerHeight();
-										carousel.height(elemHeight);
+										SliderBox.sliderHeight(carousel);
 									});
 								}
 
@@ -118,16 +117,16 @@
 									+ this.getAttribute('data-img')
 								);
 							} else if (index === options.currentSlide) {
-								elemHeight = elSlide.outerHeight();
-								carousel.height(elemHeight);
+								slideImg.one('load', function () {
+									SliderBox.sliderHeight(carousel);
+								});
 							}
 						});
 					
 						options.currentBreakpoint = breakpointVal;
 						carousel.data('options', options);
 					} else {
-						elemHeight = elSlides.eq(options.currentSlide).outerHeight();
-						carousel.height(elemHeight);
+						SliderBox.sliderHeight(carousel);
 					}
 					
 					if (options.auto) carousel.data('SliderBox').startAuto();
@@ -173,10 +172,28 @@
 				return breakpoint;
 			}
 
+		  , createNav: function createNav (carousel, navigation) {
+				//if (!supportsOrientationChange) {
+				if (!navigation) {
+					carousel.prepend('<a href="#" class="prev" rel="prev">‹</a> <a href="#" class="next" rel="next">›</a>');
+				} else {
+					carousel.append('<nav class="slider-nav ' + navigation + '"></nav>');
+					var sliderNav = $('.slider-nav', carousel);
+
+					for (var i = 0; i < $('.item', carousel).length; i++) {
+						sliderNav.append('<a class="navigate" href="#">' + i + '</a>');
+					}
+				}
+		    }
 		  , removeSlider: function removeSlider (carousel) {
 				carousel.remove();
 			}
 
+		  , sliderHeight: function sliderHeight (carousel) {
+				var elemHeight = $('.item', carousel).eq(carousel.data('options').currentSlide).outerHeight();
+
+				carousel.height(elemHeight);
+		    }
 		  , error: function error (msg) {
 				throw new Error( msg );
 			}
@@ -204,9 +221,11 @@
 					]
 				  , currentSlide 		: 0
 				  , currentBreakpoint 	: 0
+				  , navigation			: false
 				  , responsive			: false
 				  , speed 				: 500
 				}
+			  , options = options || {}
 			  , settings = $.extend(defaults, options)
 			  , _touches = {
 					'touchstart'	: {'x' : -1, 'y' : -1}
@@ -273,7 +292,7 @@
 				}
 			  , self = this;
 
-			if ('breakpoints' in options && !('responsive' in options))
+			if (!('breakpoints' in options) && !('responsive' in options))
 				settings.responsive = true;
 			
 			//
@@ -292,7 +311,6 @@
 					var carouselWidth = carousel.width()
 					  , last = $('.item', placeholder).length - 1
 					  , options = carousel.data('options')
-					  , sliderHeight
 					  , moveTo;
 
 					carousel.data('busyAnimating', true);
@@ -319,8 +337,7 @@
 
 					placeholder.animate(moveTo, settings.speed, function () {
 						carousel.data('busyAnimating', false);
-						sliderHeight = $('.item', carousel).eq(options.currentSlide).height();
-						carousel.height(sliderHeight);
+						SliderBox.sliderHeight(carousel);
 					});
 				} else {
 					setTimeout(function () {
@@ -426,6 +443,9 @@
 			}
 
 			function init () {
+				if (false !== settings.navigation)
+					SliderBox.createNav(carousel, settings.navigation);
+
 				if (settings.responsive
 				&& settings.breakpoints.constructor === Array
 				&& settings.breakpoints.length) {
@@ -433,13 +453,13 @@
 				} else {
 					onComplete(false, function () {
 						var items =  $('.item', carousel)
-						  , elemHeight = items.height()
 						  , itemWidth = carousel.width()
 						  , placeholderWidth = items.length * itemWidth;
 
-						carousel.height(elemHeight);
 						items.width(itemWidth);
 						$('.placeholder', carousel).width(placeholderWidth);
+
+						carousel.height(elemHeight);
 					});
 				}
 
@@ -461,8 +481,6 @@
 						touchHandler(e);
 						carousel.data('SliderBox').stopAuto();
 					});
-
-					$('.prev, .next', carousel).css('display', 'none');
 				} else {
 					carousel.on('click', '.prev, .next', function (e) {
 						e.preventDefault();
