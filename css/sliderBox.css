@@ -70,3 +70,43 @@
 	left: auto;
 	right: 0.25em
 }
+
+.sliderbox .slider-nav {
+	position: absolute;
+	text-align: center;
+}
+.sliderbox .slider-nav.bottom,
+.sliderbox .slider-nav.top {
+	left: 0;
+	right: 0;
+}
+.sliderbox .slider-nav.left,
+.sliderbox .slider-nav.right {
+	top: 0;
+	width: 14px;
+}
+.sliderbox .slider-nav.left {
+	left: 0;
+}
+.sliderbox .slider-nav.right {
+	right: 0;
+}
+.sliderbox .slider-nav.top {
+	top: 0;
+}
+.sliderbox .slider-nav.bottom {
+	bottom: 0;
+}
+.sliderbox .slider-nav a {
+	background: #000;
+	border-radius: 50%;
+	display: inline-block;
+	height: 14px;
+	margin-right: 10px;
+	text-indent: -9999px;
+	width: 14px;
+}
+.sliderbox .slider-nav a:hover,
+.sliderbox .slider-nav a.active {
+	background: #ccc;
+}

@@ -1,15 +1,90 @@
 ;(function ($) {
+
 	//
 	// Variables
 	//
+
 	var settingBreakpoint 			= false
 	  , supportsOrientationChange 	= 'ontouchstart' in window
 	  , orientationEvent 			= supportsOrientationChange ? 'orientationchange' : 'resize'
 	  , devicePixelRatio 			= 'devicePixelRatio' in window ? window.devicePixelRatio : 1
 	  // General functions
-      , SliderBox = {
+      , SliderBox = function SliderBox (elem, options, callback) {
+
+		//
+		// Variables
+		//
+
+		var carousel = $(elem)
+		  , placeholder = carousel.find('.placeholder')
+		  , options = options || {}
+		  , settings = $.extend({}, $.fn.sliderBox.defaults, options)
+		  , _touches = {
+				'touchstart'	: {'x' : -1, 'y' : -1}
+			  , 'touchmove' 	: {'x' : -1, 'y' : -1} 
+			  , 'touchend'  	: false
+			  , 'direction' 	: 'undetermined'
+			}
+		  , interval
+			// Api functions
+		  , api = {
+				addSlides : function addSlides (jsonData) {
+					var htmlTemplate = $('.item', placeholder).eq(0).clone()
+					  , firstAdded;
+
+					if ('breakpoints' in settings) {
+						viewPortWidth 	= getViewportWidthInCssPixels();
+						breakpoint 		= getBreakpoint(settings.breakpoints, viewPortWidth);
+						breakpointVal 	= breakpoint.folder - 0;
+					}
+
+					for (var i = 0; i < jsonData.length; i++) {
+						for (var key in jsonData[i]) {
+							if (key === 'img') {
+								if ('breakpoints' in settings) {
+									htmlTemplate.attr('data-img', jsonData[i][key]['src'])
+										.attr('data-breakpoint', jsonData[i][key]['folder'])
+										.find('img').attr('src',
+											('path' in settings && settings.path === 'absolute' ? '/' : '')
+											+ jsonData[i][key]['folder']
+												.replace('{folder}', breakpointVal)
+											+ jsonData[i][key]['src']
+										);
+								} else {
+									htmlTemplate.find('img').attr('src',
+										('path' in settings && settings.path === 'absolute' ? '/' : '')
+											+ jsonData[i][key]['folder']
+											+ jsonData[i][key]['src']);
+								}
+							} else {
+								$('.item .' + key, htmlTemplate).html(jsonData[i][key]);
+							}
+						}
+
+						placeholder.append(htmlTemplate);
+						if (!i) firstAdded = $('.item', placeholder).length - 1;
+					}
+
+					reinit();
+					moveToSlide('goto', firstAdded);
+				}
+			  
+			  , removeSlider: function removeSlider () {
+					carousel.remove();
+				}
+			  , startAuto : function startAuto () {
+					if (!'auto' in settings || !settings.auto) settings.auto = 3000;
+
+					interval = setInterval(function(){
+						moveToSlide('next')
+					}, settings.auto);
+				}
+			  , stopAuto : function stopAuto () {
+					clearInterval(interval);
+				}
+			}
 			// underscore debounce function
-			debounce : function debounce(func, wait, immediate) {
+			, debounce = function debounce(func, wait, immediate) {
 				var timeout;
 
 				return function() {
@@ -36,7 +111,7 @@
 			 * - http://www.quirksmode.org/mobile/tableViewport.html
 			 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
 			 */
-		  , getViewportWidthInCssPixels : function getViewportWidthInCssPixels() {
+		  , getViewportWidthInCssPixels = function getViewportWidthInCssPixels() {
 				var  i 			= 0
 				  , math 		= Math
 				  , screenWidth = window.screen.width
@@ -69,9 +144,8 @@
 			}
 
 			// https://gist.github.com/localpcguy/1373518
-		  , setBreakpoint : function setBreakpoint(carousel) {
-				var options = carousel.data('options')
-				  , breakpoint
+		  , setBreakpoint = function setBreakpoint(carousel) {
+				var breakpoint
 				  , breakpointVal
 				  , elemHeight
 				  , elemWidth
@@ -79,11 +153,11 @@
 				  , placeholder
 				  , viewPortWidth;
 
-				if (options.auto) carousel.data('SliderBox').stopAuto();
+				api.stopAuto();
 
 				if (!carousel.data('busyAnimating')) {
-					viewPortWidth 		= this.getViewportWidthInCssPixels();
-					breakpoint 			= this.getBreakpoint(options.breakpoints, viewPortWidth);
+					viewPortWidth 		= getViewportWidthInCssPixels();
+					breakpoint 			= getBreakpoint(settings.breakpoints, viewPortWidth);
 					breakpointVal 		= breakpoint.folder - 0;
 					elemWidth 			= carousel.parent().width();
 					placeholder 		= $('.placeholder', carousel);
@@ -93,51 +167,50 @@
 					carousel.width(elemWidth); 
 					elSlides.width(elemWidth);
 					placeholder.css({
-						'marginLeft' 	: (0 - (elemWidth * options.currentSlide))
+						'marginLeft' 	: (0 - (elemWidth * settings.currentSlide))
 					  , 'width' 		: (elemWidth * elSlides.length)
 					});
 
-					if (breakpointVal !== options.currentBreakpoint) {
+					if (breakpointVal !== settings.currentBreakpoint) {
 						elSlides.each(function (index, el) {
 							var elSlide			 	= $(el)
 							  , attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
 							  , slideImg 			= elSlide.find('img');
 
-							if (slideImg.length && typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
-								if (index === options.currentSlide) {
+							if (slideImg.length) {
+								if (index === settings.currentSlide) {
 									slideImg.one('load', function () {
-										SliderBox.sliderHeight(carousel);
+										sliderHeight(carousel);
 									});
 								}
 
-								slideImg.attr('src',
-									('path' in options && options.path === 'absolute' ? '/' : '')
-									+ attrDataBreakpoint
-										.replace('{folder}', breakpointVal)
-									+ this.getAttribute('data-img')
-								);
-							} else if (index === options.currentSlide) {
-								slideImg.one('load', function () {
-									SliderBox.sliderHeight(carousel);
-								});
+								if (typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
+									slideImg.attr('src',
+										('path' in settings && settings.path === 'absolute' ? '/' : '')
+										+ attrDataBreakpoint
+											.replace('{folder}', breakpointVal)
+										+ this.getAttribute('data-img')
+									);
+								}
+							} else {
+								if (index === settings.currentSlide) sliderHeight(carousel);
 							}
 						});
 					
-						options.currentBreakpoint = breakpointVal;
-						carousel.data('options', options);
+						settings.currentBreakpoint = breakpointVal;
 					} else {
-						SliderBox.sliderHeight(carousel);
+						sliderHeight(carousel);
 					}
 					
-					if (options.auto) carousel.data('SliderBox').startAuto();
+					if (settings.auto) api.startAuto();
 				} else {
 					setTimeout(function () {
-						SliderBox.setBreakpoint(carousel);
+						setBreakpoint(carousel);
 					}, 250);
 				}
 			}
 
-		  , getBreakpoint: function getBreakpoint(breakpoints, vWidth) {
+		  , getBreakpoint = function getBreakpoint(breakpoints, vWidth) {
 				var _vWidth 	= vWidth
 				   , i 			= 0
 				   , breakpoint = {}
@@ -172,7 +245,7 @@
 				return breakpoint;
 			}
 
-		  , createNav: function createNav (carousel, navigation) {
+		  , createNav = function createNav (carousel, navigation) {
 				//if (!supportsOrientationChange) {
 				if (!navigation) {
 					carousel.prepend('<a href="#" class="prev" rel="prev">‹</a> <a href="#" class="next" rel="next">›</a>');
@@ -185,372 +258,309 @@
 					}
 				}
 		    }
-		  , removeSlider: function removeSlider (carousel) {
+		  , removeSlider = function removeSlider (carousel) {
 				carousel.remove();
 			}
 
-		  , sliderHeight: function sliderHeight (carousel) {
-				var elemHeight = $('.item', carousel).eq(carousel.data('options').currentSlide).outerHeight();
+		  , sliderHeight = function sliderHeight (carousel) {
+				var elemHeight = $('.item', carousel).eq(settings.currentSlide).outerHeight();
 
 				carousel.height(elemHeight);
 		    }
-		  , error: function error (msg) {
+		  , error = function error (msg) {
 				throw new Error( msg );
+			};
+
+		if (!('breakpoints' in settings) && !('responsive' in settings))
+			settings.responsive = true;
+		
+		//
+		// Functions
+		//
+
+		function moveToSlide (direction, num) {
+			if (!settingBreakpoint) {
+				var carouselWidth = carousel.width()
+				  , last = $('.item', placeholder).length - 1
+				  , moveTo;
+
+				carousel.data('busyAnimating', true);
+
+				switch (direction) {
+					case 'prev':
+						settings.currentSlide = settings.currentSlide === 0
+							? last
+							: settings.currentSlide - 1;
+
+						moveTo = {
+							marginLeft: -(carouselWidth * settings.currentSlide)
+						};
+						break;
+					case 'next':
+						settings.currentSlide = settings.currentSlide === last
+							? 0
+							: settings.currentSlide + 1;
+
+						moveTo = {
+							marginLeft: -(carouselWidth * settings.currentSlide)
+						};
+						break;
+					case 'goto':
+						moveTo = {
+							marginLeft: -(carouselWidth * num)
+						};
+						break;
+				}
+
+				placeholder.animate(moveTo, settings.speed, function () {
+					carousel.data('busyAnimating', false);
+					sliderHeight(carousel);
+				});
+			} else {
+				setTimeout(function () {
+					moveToSlide(direction, num);
+				}, 100);
 			}
-		};
+		}
 
-	// Plugin
-	$.fn.sliderBox = function pixieboxSlider(options, callback) {
-		return this.each(function () {
-			//
-			// Variables
-			//
-			var carousel = $(this)
-			  , placeholder = carousel.find('.placeholder')
-			  , defaults = {
-					auto 				: false
-				  , breakpoints : [
-						{folder: '480', maxWidth: 480}
-					  , {folder: '640', minWidth: 481, maxWidth: 767}
-					  , {folder: '900', minWidth: 748} // tablet and desktop
-					  , {folder: '1170', minWidth: 992}
-					  , {folder: '640', maxWidth: 320, minDevicePixelRatio: 2} // iPhone 4 Retina display
-					  , {folder: '1170', minWidth: 320, maxWidth: 667, minDevicePixelRatio: 2} // iPhone 5/6 Retina display
-					  , {folder: '2048', minWidth: 748, maxWidth: 1024, minDevicePixelRatio: 2} // tablet Retina display
-					  , {folder: '2048', minWidth: 414, maxWidth: 736, minDevicePixelRatio: 3} // iPhone 6 PLUS Retina display
-					]
-				  , currentSlide 		: 0
-				  , currentBreakpoint 	: 0
-				  , navigation			: false
-				  , responsive			: false
-				  , speed 				: 500
-				}
-			  , options = options || {}
-			  , settings = $.extend(defaults, options)
-			  , _touches = {
-					'touchstart'	: {'x' : -1, 'y' : -1}
-				  , 'touchmove' 	: {'x' : -1, 'y' : -1} 
-				  , 'touchend'  	: false
-				  , 'direction' 	: 'undetermined'
-			    }
-			  , interval
-				// Api functions
-			  , api = {
-					addSlides : function addSlides (jsonData) {
-						var htmlTemplate = $('.item', placeholder).eq(0).clone()
-						  , firstAdded;
+		function onComplete (waitForAllImages, callback) {
+			var elems = carousel.add(carousel.find('img')).filter('img')
+			  , numberOfRemainingImages = elems.length;
 
-						if ('breakpoints' in settings) {
-							viewPortWidth 	= SliderBox.getViewportWidthInCssPixels();
-							breakpoint 		= SliderBox.getBreakpoint(settings.breakpoints, viewPortWidth);
-							breakpointVal 	= breakpoint.folder - 0;
-						}
-
-						for (var i = 0; i < jsonData.length; i++) {
-							for (var key in jsonData[i]) {
-								if (key === 'img') {
-									if ('breakpoints' in settings) {
-										htmlTemplate.attr('data-img', jsonData[i][key]['src'])
-											.attr('data-breakpoint', jsonData[i][key]['folder'])
-											.find('img').attr('src',
-												('path' in settings && settings.path === 'absolute' ? '/' : '')
-												+ jsonData[i][key]['folder']
-													.replace('{folder}', breakpointVal)
-												+ jsonData[i][key]['src']
-											);
-									} else {
-										htmlTemplate.find('img').attr('src',
-											('path' in settings && settings.path === 'absolute' ? '/' : '')
-												+ jsonData[i][key]['folder']
-												+ jsonData[i][key]['src']);
-									}
-								} else {
-									$('.item .' + key, htmlTemplate).html(jsonData[i][key]);
-								}
-							}
-
-							placeholder.append(htmlTemplate);
-							if (!i) firstAdded = $('.item', placeholder).length - 1;
-						}
-
-						reinit();
-						moveToSlide('goto', firstAdded);
-					}
-				  , removeSlider : function removeSlider() {
-						SliderBox.removeSlider(carousel);
-					}
-				  , startAuto : function startAuto () {
-						if (!'auto' in settings || !settings.auto) settings.auto = 3000;
-
-						interval = setInterval(function(){
-							moveToSlide('next')
-						}, settings.auto);
-					}
-				  , stopAuto : function stopAuto () {
-						clearInterval(interval);
-					}
-				}
-			  , self = this;
-
-			if (!('breakpoints' in options) && !('responsive' in options))
-				settings.responsive = true;
-			
-			//
-			// Cache data to each carousel
-			carousel.data({
-				busyAnimating 	: false
-			  , options 		: settings
-			  , SliderBox		: api
-			});
-
-			//
-			// Functions
-			//
-			function moveToSlide (direction, num) {
-				if (!settingBreakpoint) {
-					var carouselWidth = carousel.width()
-					  , last = $('.item', placeholder).length - 1
-					  , options = carousel.data('options')
-					  , moveTo;
-
-					carousel.data('busyAnimating', true);
-
-					switch (direction) {
-						case 'prev':
-							options.currentSlide = options.currentSlide === 0 ? last : options.currentSlide - 1;
-							moveTo = {
-								marginLeft: -(carouselWidth * options.currentSlide)
-							};
-							break;
-						case 'next':
-							options.currentSlide = options.currentSlide === last ? 0 : options.currentSlide + 1;
-							moveTo = {
-								marginLeft: -(carouselWidth * options.currentSlide)
-							};
-							break;
-						case 'goto':
-							moveTo = {
-								marginLeft: -(carouselWidth * num)
-							};
-							break;
-					}
-
-					placeholder.animate(moveTo, settings.speed, function () {
-						carousel.data('busyAnimating', false);
-						SliderBox.sliderHeight(carousel);
-					});
-				} else {
-					setTimeout(function () {
-						moveToSlide(direction, num);
-					}, 100);
-				}
+			if (!numberOfRemainingImages) {
+				callback();
+				return;
 			}
 
-			function onComplete (waitForAllImages, callback) {
-				var elems = carousel.add(carousel.find('img')).filter('img')
-				  , numberOfRemainingImages = elems.length;
+			elems.each(function () {
+				var that = this
+				  , jQueryThat 		= $(that)
+				  , events 			= 'load error'
+				  , loadFunction 	= function () {
+						jQueryThat.off(events, loadFunction);
 
-				if (!numberOfRemainingImages) {
-					callback();
-					return;
-				}
-
-				elems.each(function () {
-					var that = this
-					  , jQueryThat 		= $(that)
-					  , events 			= 'load error'
-					  , loadFunction 	= function () {
-							jQueryThat.off(events, loadFunction);
-
-							if (waitForAllImages) {
-								numberOfRemainingImages--;
-								if (numberOfRemainingImages == 0) {
-									callback();
-								}
-							} else {
+						if (waitForAllImages) {
+							numberOfRemainingImages--;
+							if (numberOfRemainingImages == 0) {
 								callback();
 							}
-						};
+						} else {
+							callback();
+						}
+					};
 
-					jQueryThat.on(events, loadFunction);
-					/*
-					 * Start ugly working IE fix.
-					 */
-					if (that.readyState == 'complete') {
-						jQueryThat.trigger('load');
-					} else if (that.readyState) {
-						// Sometimes IE doesn't fire the readystatechange, even though the readystate has been changed to complete. AARRGHH!! I HATE IE, I HATE IT, I HATE IE!
-						that.src = that.src; // Do not ask me why this works, ask the IE team!
-					}
-					/*
-					 * End ugly working IE fix.
-					 */
-					else if (that.complete) {
-						jQueryThat.trigger('load');
-					}
-					else if (that.complete === undefined) {
-						var src = that.src;
-						// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
-						// data uri bypasses webkit log warning (thx doug jones)
-						that.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
-						that.src = src;
-					}
-				});
-			}
+				jQueryThat.on(events, loadFunction);
+				/*
+				 * Start ugly working IE fix.
+				 */
+				if (that.readyState == 'complete') {
+					jQueryThat.trigger('load');
+				} else if (that.readyState) {
+					// Sometimes IE doesn't fire the readystatechange, even though the readystate has been changed to complete. AARRGHH!! I HATE IE, I HATE IT, I HATE IE!
+					that.src = that.src; // Do not ask me why this works, ask the IE team!
+				}
+				/*
+				 * End ugly working IE fix.
+				 */
+				else if (that.complete) {
+					jQueryThat.trigger('load');
+				}
+				else if (that.complete === undefined) {
+					var src = that.src;
+					// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
+					// data uri bypasses webkit log warning (thx doug jones)
+					that.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+					that.src = src;
+				}
+			});
+		}
 
-			function touchHandler (event) {
-				var touch
-				  , xSwipe
-				  , ySwipe;
+		function touchHandler (event) {
+			var touch
+			  , xSwipe
+			  , ySwipe;
 
-				if (typeof event !== 'undefined'){	
-					// for vanilla javascript use event.touches
-					if (typeof event.originalEvent.touches !== 'undefined') {
-						touch = event.originalEvent.touches[0];
+			if (typeof event !== 'undefined'){	
+				// for vanilla javascript use event.touches
+				if (typeof event.originalEvent.touches !== 'undefined') {
+					touch = event.originalEvent.touches[0];
 
-						switch (event.originalEvent.type) {
-							case 'touchstart':
-								_touches[event.originalEvent.type].x = touch.pageX;
-								_touches[event.originalEvent.type].y = touch.pageY;
-								break;
-							case 'touchmove':
-								_touches[event.originalEvent.type].x = touch.pageX;
-								_touches[event.originalEvent.type].y = touch.pageY;
-								break;
-							case 'touchend':
-								if (!carousel.data('busyAnimating')) {
-									_touches[event.originalEvent.type] = true;
+					switch (event.originalEvent.type) {
+						case 'touchstart':
+							_touches[event.originalEvent.type].x = touch.pageX;
+							_touches[event.originalEvent.type].y = touch.pageY;
+							break;
+						case 'touchmove':
+							_touches[event.originalEvent.type].x = touch.pageX;
+							_touches[event.originalEvent.type].y = touch.pageY;
+							break;
+						case 'touchend':
+							if (!carousel.data('busyAnimating')) {
+								_touches[event.originalEvent.type] = true;
 
-									if (_touches.touchstart.x > -1 && _touches.touchmove.x > -1) {
-										xSwipe = Math.abs(_touches.touchstart.x - _touches.touchmove.x);
-										ySwipe = Math.abs(_touches.touchstart.y - _touches.touchmove.y);
+								if (_touches.touchstart.x > -1 && _touches.touchmove.x > -1) {
+									xSwipe = Math.abs(_touches.touchstart.x - _touches.touchmove.x);
+									ySwipe = Math.abs(_touches.touchstart.y - _touches.touchmove.y);
 
-										if (xSwipe > ySwipe && xSwipe > (SliderBox.getViewportWidthInCssPixels() * .33)) {
-											_touches.direction = _touches.touchstart.x < _touches.touchmove.x ? 'left' : 'right';
-											
-											if (_touches.direction === 'left') {
-												moveToSlide('prev');
-											} else if (_touches.direction === 'right') {
-												moveToSlide('next')
-											}
+									if (xSwipe > ySwipe && xSwipe > (getViewportWidthInCssPixels() * .33)) {
+										_touches.direction = _touches.touchstart.x < _touches.touchmove.x ? 'left' : 'right';
+										
+										if (_touches.direction === 'left') {
+											moveToSlide('prev');
+										} else if (_touches.direction === 'right') {
+											moveToSlide('next')
 										}
 									}
 								}
-								break;
-						}
+							}
+							break;
 					}
 				}
 			}
+		}
 
-			function init () {
-				if (false !== settings.navigation)
-					SliderBox.createNav(carousel, settings.navigation);
+		function init () {
+			if (false !== settings.navigation && !supportsOrientationChange)
+				createNav(carousel, settings.navigation);
 
-				if (settings.responsive
-				&& settings.breakpoints.constructor === Array
-				&& settings.breakpoints.length) {
-					SliderBox.setBreakpoint(carousel);
-				} else {
-					onComplete(false, function () {
-						var items =  $('.item', carousel)
-						  , itemWidth = carousel.width()
-						  , placeholderWidth = items.length * itemWidth;
+			if (settings.responsive
+			&& settings.breakpoints.constructor === Array
+			&& settings.breakpoints.length) {
+				setBreakpoint(carousel);
+			} else {
+				onComplete(false, function () {
+					var items =  $('.item', carousel)
+					  , itemWidth = carousel.width()
+					  , placeholderWidth = items.length * itemWidth;
 
-						items.width(itemWidth);
-						$('.placeholder', carousel).width(placeholderWidth);
+					items.width(itemWidth);
+					$('.placeholder', carousel).width(placeholderWidth);
 
-						carousel.height(elemHeight);
-					});
-				}
-
-				if ('onComplete' in settings) onComplete(true, settings.onComplete);
-
-				//
-				// Events
-				//
-				carousel.on('click', '.navigate', function (e) {
-					e.preventDefault();
-
-					var num = $(e.currentTarget).index();
-					moveToSlide('goto', num);
+					sliderHeight(carousel);
 				});
-
-				if (supportsOrientationChange) {
-					//https://gist.github.com/localpcguy/1373518
-					carousel.on('touchstart touchmove touchend', function (e) {
-						touchHandler(e);
-						carousel.data('SliderBox').stopAuto();
-					});
-				} else {
-					carousel.on('click', '.prev, .next', function (e) {
-						e.preventDefault();
-						carousel.data('SliderBox').stopAuto();
-						moveToSlide(this.rel);
-					});
-				}
-
-				if (settings.responsive) {
-					$(window).on(orientationEvent, SliderBox.debounce(function () {
-						SliderBox.setBreakpoint(carousel);
-					}, 250));
-				}
 			}
 
-			function reinit () {
-				var items = $('.item', placeholder)
-				  , newWidth = items.length * items.eq(0).width();
-
-				carousel.data('options').currentSlide = items.length - 1;
-				placeholder.width(newWidth);
-			}
+			if ('onComplete' in settings) onComplete(true, settings.onComplete);
 
 			//
-			// Initialize
+			// Events
 			//
-			if ('ajax' in settings) {
-				$.ajax({
-					  url       : settings.ajax
-					, dataType  : 'json'
-				}).done(function (response) {
-					var elClone = $('.item', carousel).eq(0)
-					  , $clone
-					  , errorMessage = 'No slides found, or misformatted json response.';
+			carousel.on('click', '.navigate', function (e) {
+				e.preventDefault();
 
-					if ('slides' in response) {
-						$('.loading', carousel).remove();
+				var num = $(e.currentTarget).index();
+				moveToSlide('goto', num);
+			});
 
-						for (var i = 0; i < response.slides.length; i++) {
-							$clone = elClone.clone();
-
-							for (var key in response.slides[i]) {
-								if (key === 'image') {
-									if (settings.responsive) {
-										$clone.attr('data-breakpoint', response.slides[i]['image'].path)
-											.attr('data-img',  response.slides[i]['image'].img);
-									} else {
-										$clone.find('img').attr('src', response.slides[i]['image'].path + response.slides[i]['image'].img)
-									}
-								} else {
-									$clone.find('.' + key).html(response.slides[i][key]);
-								}
-							}
-
-							placeholder.append($clone);
-							if (!('image' in response.slides[i])) {
-								$('.item', placeholder).last().find('img').remove();
-							}
-						}
-
-						$('.item', carousel).eq(0).remove();
-						init();
-					} else {
-						$('.loading', carousel).html(errorMessage);
-						return SliderBox.error(errorMessage);
-					}
+			if (supportsOrientationChange) {
+				//https://gist.github.com/localpcguy/1373518
+				carousel.on('touchstart touchmove touchend', function (e) {
+					touchHandler(e);
+					api.stopAuto();
 				});
 			} else {
-				init();
-			}			
-		});
+				carousel.on('click', '.prev, .next', function (e) {
+					e.preventDefault();
+					api.stopAuto();
+					moveToSlide(this.rel);
+				});
+			}
+
+			if (settings.responsive) {
+				$(window).on(orientationEvent, debounce(function () {
+					setBreakpoint(carousel);
+				}, 250));
+			}
+		}
+
+		function reinit () {
+			var items = $('.item', placeholder)
+			  , newWidth = items.length * items.eq(0).width();
+
+			options.currentSlide = items.length - 1;
+			placeholder.width(newWidth);
+		}
+
+		//
+		// Initialize
+		//
+		if ('ajax' in settings) {
+			$.ajax({
+				  url       : settings.ajax
+				, dataType  : 'json'
+			}).done(function (response) {
+				var elClone = $('.item', carousel).eq(0)
+				  , $clone
+				  , errorMessage = 'No slides found, or misformatted json response.';
+
+				if ('slides' in response) {
+					$('.loading', carousel).remove();
+
+					for (var i = 0; i < response.slides.length; i++) {
+						$clone = elClone.clone();
+
+						for (var key in response.slides[i]) {
+							if (key === 'image') {
+								if (settings.responsive) {
+									$clone.attr('data-breakpoint', response.slides[i]['image'].path)
+										.attr('data-img',  response.slides[i]['image'].img);
+								} else {
+									$clone.find('img').attr('src', response.slides[i]['image'].path + response.slides[i]['image'].img)
+								}
+							} else {
+								$clone.find('.' + key).html(response.slides[i][key]);
+							}
+						}
+
+						placeholder.append($clone);
+						if (!('image' in response.slides[i])) {
+							$('.item', placeholder).last().find('img').remove();
+						}
+					}
+
+					$('.item', carousel).eq(0).remove();
+					init();
+				} else {
+					$('.loading', carousel).html(errorMessage);
+					return error(errorMessage);
+				}
+			});
+		} else {
+			init();
+		}	
+
+		return api;
+	};
+	
+	$.fn.sliderBox = function (options, callback) {
+		 return this.each(function(key, value){
+			var carousel = $(this);
+			// Return early if this element already has a plugin instance
+			if (carousel.data('sliderBox')) return carousel.data('sliderBox');
+			var sliderBox = new SliderBox(this, options, callback);
+			carousel.data({
+				busyAnimating 	: false
+			  , sliderBox		: sliderBox
+			});
+		 });
+	};
+	
+	$.fn.sliderBox.defaults = {
+		auto 				: false
+	  , breakpoints 		: [
+			{folder: '480', maxWidth: 480}
+		  , {folder: '640', minWidth: 481, maxWidth: 767}
+		  , {folder: '900', minWidth: 748} // tablet and desktop
+		  , {folder: '1170', minWidth: 992}
+		  , {folder: '640', maxWidth: 320, minDevicePixelRatio: 2} // iPhone 4 Retina display
+		  , {folder: '1170', minWidth: 320, maxWidth: 667, minDevicePixelRatio: 2} // iPhone 5/6 Retina display
+		  , {folder: '2048', minWidth: 748, maxWidth: 1024, minDevicePixelRatio: 2} // tablet Retina display
+		  , {folder: '2048', minWidth: 414, maxWidth: 736, minDevicePixelRatio: 3} // iPhone 6 PLUS Retina display
+		]
+	  , currentSlide 		: 0
+	  , currentBreakpoint 	: 0
+	  , navigation			: false
+	  , responsive			: false
+	  , speed 				: 500
 	};
 })(jQuery);
