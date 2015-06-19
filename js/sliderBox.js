@@ -311,9 +311,12 @@
 						moveTo = {
 							marginLeft: -(carouselWidth * num)
 						};
-						if (settings.navigation)
-							$('.slider-nav a', carousel).removeClass('active').eq(num).addClass('active');
 						break;
+				}
+
+				if (settings.navigation) {
+					$('.slider-nav a', carousel).removeClass('active')
+						.eq(settings.currentSlide).addClass('active');
 				}
 
 				placeholder.animate(moveTo, settings.speed, function () {
