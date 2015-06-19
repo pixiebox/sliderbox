@@ -246,9 +246,8 @@
 			}
 
 		  , createNav = function createNav (carousel, navigation) {
-				//if (!supportsOrientationChange) {
-				if (!navigation) {
-					carousel.prepend('<a href="#" class="prev" rel="prev">‹</a> <a href="#" class="next" rel="next">›</a>');
+				if (!navigation && !supportsOrientationChange) {
+					carousel.prepend('<a href="#" class="prev" rel="prev">&lt;</a> <a href="#" class="next" rel="next">&gt;</a>');
 				} else {
 					carousel.append('<nav class="slider-nav ' + navigation + '"></nav>');
 					var sliderNav = $('.slider-nav', carousel);
@@ -256,6 +255,8 @@
 					for (var i = 0; i < $('.item', carousel).length; i++) {
 						sliderNav.append('<a class="navigate" href="#">' + i + '</a>');
 					}
+
+					$('a.navigate', sliderNav).eq(0).addClass('active');
 				}
 		    }
 		  , removeSlider = function removeSlider (carousel) {
@@ -265,13 +266,13 @@
 		  , sliderHeight = function sliderHeight (carousel) {
 				var elemHeight = $('.item', carousel).eq(settings.currentSlide).outerHeight();
 
-				carousel.height(elemHeight);
+				carousel.animate({'height' : elemHeight});
 		    }
 		  , error = function error (msg) {
 				throw new Error( msg );
 			};
 
-		if (!('breakpoints' in settings) && !('responsive' in settings))
+		if ('breakpoints' in settings && !settings.responsive)
 			settings.responsive = true;
 		
 		//
@@ -306,9 +307,12 @@
 						};
 						break;
 					case 'goto':
+						settings.currentSlide = num;
 						moveTo = {
 							marginLeft: -(carouselWidth * num)
 						};
+						if (settings.navigation)
+							$('.slider-nav a', carousel).removeClass('active').eq(num).addClass('active');
 						break;
 				}
 
@@ -420,8 +424,7 @@
 		}
 
 		function init () {
-			if (false !== settings.navigation && !supportsOrientationChange)
-				createNav(carousel, settings.navigation);
+			createNav(carousel, settings.navigation);
 
 			if (settings.responsive
 			&& settings.breakpoints.constructor === Array
