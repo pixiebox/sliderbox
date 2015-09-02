@@ -10,31 +10,34 @@
 	  , devicePixelRatio 			= 'devicePixelRatio' in window ? window.devicePixelRatio : 1
 	  // General functions
       , SliderBox = function SliderBox (elem, options, callback) {
-			//
-			// Variables
-			//
 
-			var carousel = $(elem)
-			  , placeholder = carousel.find('.placeholder')
-			  , options = options || {}
-			  , settings = $.extend({}, $.fn.sliderBox.defaults, options)
-			  , _touches = {
+		//
+		// Variables
+		//
+
+		var carousel = $(elem)
+		  , placeholder = carousel.find('.placeholder')
+		  , options = options || {}
+		  , settings = $.extend({}, $.fn.sliderBox.defaults, options)
+		  , _touches = {
 					'touchstart'	: {'x' : -1, 'y' : -1}
-				  , 'touchmove' 	: {'x' : -1, 'y' : -1} 
-				  , 'touchend'  	: false
-				  , 'direction' 	: 'undetermined'
-				}
-			  , interval
-				// Api functions
-			  , api = {
+			  , 'touchmove' 	: {'x' : -1, 'y' : -1} 
+			  , 'touchend'  	: false
+			  , 'direction' 	: 'undetermined'
+			}
+		  , interval
+			// Api functions
+		  , api = {
 					addSlides : function addSlides (jsonData) {
 						var htmlTemplate = $('.item', placeholder).eq(0).clone()
-						  , firstAdded;
+							, firstAdded;
 
 						if ('breakpoints' in settings) {
 							viewPortWidth 	= getViewportWidthInCssPixels();
 							breakpoint 		= getBreakpoint(settings.breakpoints, viewPortWidth);
-							breakpointVal 	= breakpoint.folder - 0;
+							breakpointVal = !api.isEmpty(breakpoint)
+								? breakpoint.folder - 0
+								: elBreakpointVal = settings.defaultBreakpoint.folder;
 						}
 
 						for (var i = 0; i < jsonData.length; i++) {
@@ -67,33 +70,40 @@
 						reinit();
 						moveToSlide('goto', firstAdded);
 					}
-				  
-				  , removeSlider: function removeSlider () {
+					, isEmpty: function isEmpty (obj) {
+							for (var prop in obj) {
+								if (obj.hasOwnProperty(prop))
+									return false;
+							}
+
+							return true;
+						}
+					, removeSlider: function removeSlider () {
 						carousel.remove();
 					}
-				  , startAuto : function startAuto () {
+					, startAuto : function startAuto () {
 						if (!'auto' in settings || !settings.auto) settings.auto = 3000;
 
 						interval = setInterval(function(){
 							moveToSlide('next')
 						}, settings.auto);
 					}
-				  , stopAuto : function stopAuto () {
+					, stopAuto : function stopAuto () {
 						clearInterval(interval);
 					}
 				}
-				// underscore debounce function
-				, debounce = function debounce(func, wait, immediate) {
+			// underscore debounce function
+			, debounce = function debounce(func, wait, immediate) {
 					var timeout;
 
 					return function() {
 						var context = this
-						  , args 	= arguments
-						  , later 	= function() {
+							, args 	= arguments
+							, later 	= function() {
 								timeout = null;
 								if (!immediate) func.apply(context, args);
 							}
-						  , callNow = immediate && !timeout;
+							, callNow = immediate && !timeout;
 
 						clearTimeout(timeout);
 						timeout = setTimeout(later, wait);
@@ -101,26 +111,26 @@
 					};
 				}
 
-				 /*
-				 * Returns the layout viewport width in CSS pixels.
-				 * To achieve a precise result the following meta must be included at least:
-				 * <meta name="viewport" content="width=device-width">
-				 * See:
-				 * - http://www.quirksmode.org/mobile/viewports2.html
-				 * - http://www.quirksmode.org/mobile/tableViewport.html
-				 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
-				 */
-			  , getViewportWidthInCssPixels = function getViewportWidthInCssPixels() {
+			 /*
+			 * Returns the layout viewport width in CSS pixels.
+			 * To achieve a precise result the following meta must be included at least:
+			 * <meta name="viewport" content="width=device-width">
+			 * See:
+			 * - http://www.quirksmode.org/mobile/viewports2.html
+			 * - http://www.quirksmode.org/mobile/tableViewport.html
+			 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
+			 */
+		  , getViewportWidthInCssPixels = function getViewportWidthInCssPixels() {
 					var  i 			= 0
-					  , math 		= Math
-					  , screenWidth = window.screen.width
-					  , widths 		= [
+						, math 		= Math
+						, screenWidth = window.screen.width
+						, widths 		= [
 							window.innerWidth
-						  , window.document.documentElement.clientWidth
-						  , window.document.documentElement.offsetWidth
-						  , window.document.body.clientWidth
+							, window.document.documentElement.clientWidth
+							, window.document.documentElement.offsetWidth
+							, window.document.body.clientWidth
 						]
-					  , width;
+						, width;
 
 					for (; i < widths.length; i++) {
 						// If not a number remove it
@@ -142,39 +152,42 @@
 					return width || screenWidth || 0;
 				}
 
-				// https://gist.github.com/localpcguy/1373518
-			  , setBreakpoint = function setBreakpoint(carousel) {
+			// https://gist.github.com/localpcguy/1373518
+		  , setBreakpoint = function setBreakpoint(carousel) {
 					var breakpoint
-					  , breakpointVal
-					  , elemHeight
-					  , elemWidth
-					  , elSlides
-					  , placeholder
-					  , viewPortWidth;
+						, breakpointVal
+						, elemHeight
+						, elemWidth
+						, elSlides
+						, placeholder
+						, viewPortWidth;
 
 					api.stopAuto();
 
 					if (!carousel.data('busyAnimating')) {
 						viewPortWidth 		= getViewportWidthInCssPixels();
-						breakpoint 			= getBreakpoint(settings.breakpoints, viewPortWidth);
-						breakpointVal 		= breakpoint.folder - 0;
-						elemWidth 			= carousel.parent().width();
-						placeholder 		= $('.placeholder', carousel);
-						elSlides 			= $('.item', placeholder);
-						settingBreakpoint 	= false;
+						breakpoint 				= getBreakpoint(settings.breakpoints, viewPortWidth);
+						elemWidth 				= carousel.parent().width();
+						placeholder 			= $('.placeholder', carousel);
+						elSlides 					= $('.item', placeholder);
+						settingBreakpoint = false;
+
+						breakpointVal = !api.isEmpty(breakpoint)
+							? breakpoint.folder - 0
+							: elBreakpointVal = settings.defaultBreakpoint.folder;
 
 						carousel.width(elemWidth); 
 						elSlides.width(elemWidth);
 						placeholder.css({
 							'marginLeft' 	: (0 - (elemWidth * settings.currentSlide))
-						  , 'width' 		: (elemWidth * elSlides.length)
+							, 'width' 		: (elemWidth * elSlides.length)
 						});
 
 						if (breakpointVal !== settings.currentBreakpoint) {
 							elSlides.each(function (index, el) {
 								var elSlide			 	= $(el)
-								  , attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
-								  , slideImg 			= elSlide.find('img');
+									, attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
+									, slideImg 			= elSlide.find('img');
 
 								if (slideImg.length) {
 									if (index === settings.currentSlide) {
@@ -186,9 +199,8 @@
 									if (typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
 										slideImg.attr('src',
 											('path' in settings && settings.path === 'absolute' ? '/' : '')
-											+ attrDataBreakpoint
+											+ (attrDataBreakpoint	+ this.getAttribute('data-img'))
 												.replace('{folder}', breakpointVal)
-											+ this.getAttribute('data-img')
 										);
 									}
 								} else {
@@ -209,14 +221,14 @@
 					}
 				}
 
-			  , getBreakpoint = function getBreakpoint(breakpoints, vWidth) {
+		  , getBreakpoint = function getBreakpoint(breakpoints, vWidth) {
 					var _vWidth 	= vWidth
-					   , i 			= 0
-					   , breakpoint = {}
-					   , _breakpoint
-					   , minWidth
-					   , maxWidth
-					   , minDpr;
+						 , i 			= 0
+						 , breakpoint = {}
+						 , _breakpoint
+						 , minWidth
+						 , maxWidth
+						 , minDpr;
 
 					while (_breakpoint = breakpoints[i]) {
 						minWidth = _breakpoint['minWidth'];
@@ -244,11 +256,11 @@
 					return breakpoint;
 				}
 
-			  , createNav = function createNav (carousel, navigation) {
+		  , createNav = function createNav (carousel, navigation) {
 					if (!navigation && !supportsOrientationChange) {
-						carousel.prepend('<a href="#" class="prev" rel="prev">&lt;</a> <a href="#" class="next" rel="next">&gt;</a>');
+						carousel.prepend('<nav aria-controls="carousel"><a href="#" class="prev" aria-label="previous" rel="prev">&lt;</a> <a href="#" class="next" rel="next" aria-label="next">&gt;</a></nav>');
 					} else {
-						carousel.append('<nav class="slider-nav ' + navigation + '"></nav>');
+						carousel.append('<nav class="slider-nav ' + navigation + '" aria-controls="carousel"></nav>');
 						var sliderNav = $('.slider-nav', carousel);
 
 						for (var i = 0; i < $('.item', carousel).length; i++) {
@@ -257,303 +269,311 @@
 
 						$('a.navigate', sliderNav).eq(0).addClass('active');
 					}
-				}
-			  , removeSlider = function removeSlider (carousel) {
+		    }
+		  , removeSlider = function removeSlider (carousel) {
 					carousel.remove();
 				}
 
-			  , sliderHeight = function sliderHeight (carousel) {
+		  , sliderHeight = function sliderHeight (carousel) {
 					var elemHeight = $('.item', carousel).eq(settings.currentSlide).outerHeight();
 
 					carousel.animate({'height' : elemHeight});
-				}
-			  , error = function error (msg) {
+		    }
+		  , error = function error (msg) {
 					throw new Error( msg );
 				};
 
-			if ('breakpoints' in settings && !settings.responsive)
-				settings.responsive = true;
-			
-			//
-			// Functions
-			//
+		if ('breakpoints' in settings && !settings.responsive)
+			settings.responsive = true;
+		
+		//
+		// Functions
+		//
 
-			function moveToSlide (direction, num) {
-				if (!settingBreakpoint) {
-					var carouselWidth = carousel.width()
-					  , last = $('.item', placeholder).length - 1
-					  , moveTo;
+		function moveToSlide (direction, num) {
+			if (!settingBreakpoint) {
+				var carouselWidth = carousel.width()
+				  , items = $('.item', placeholder)
+				  , last = items.length - 1
+				  , moveTo;
 
-					carousel.data('busyAnimating', true);
+				items.eq(settings.currentSlide).attr('aria-hidden', 'false');
+				items.not(':eq(' + settings.currentSlide + ')').attr('aria-hidden', 'true');
 
-					switch (direction) {
-						case 'prev':
-							settings.currentSlide = settings.currentSlide === 0
-								? last
-								: settings.currentSlide - 1;
+				carousel.data('busyAnimating', true);
 
-							moveTo = {
-								marginLeft: -(carouselWidth * settings.currentSlide)
-							};
-							break;
-						case 'next':
-							settings.currentSlide = settings.currentSlide === last
-								? 0
-								: settings.currentSlide + 1;
+				switch (direction) {
+					case 'prev':
+						settings.currentSlide = settings.currentSlide === 0
+							? last
+							: settings.currentSlide - 1;
 
-							moveTo = {
-								marginLeft: -(carouselWidth * settings.currentSlide)
-							};
-							break;
-						case 'goto':
-							settings.currentSlide = num;
-							moveTo = {
-								marginLeft: -(carouselWidth * num)
-							};
-							break;
-					}
+						moveTo = {
+							marginLeft: -(carouselWidth * settings.currentSlide)
+						};
+						break;
+					case 'next':
+						settings.currentSlide = settings.currentSlide === last
+							? 0
+							: settings.currentSlide + 1;
 
-					if (settings.navigation) {
-						$('.slider-nav a', carousel).removeClass('active')
-							.eq(settings.currentSlide).addClass('active');
-					}
-
-					placeholder.animate(moveTo, settings.speed, function () {
-						carousel.data('busyAnimating', false);
-						sliderHeight(carousel);
-					});
-				} else {
-					setTimeout(function () {
-						moveToSlide(direction, num);
-					}, 100);
+						moveTo = {
+							marginLeft: -(carouselWidth * settings.currentSlide)
+						};
+						break;
+					case 'goto':
+						settings.currentSlide = num;
+						moveTo = {
+							marginLeft: -(carouselWidth * num)
+						};
+						break;
 				}
+
+				if (settings.navigation) {
+					$('.slider-nav a', carousel).removeClass('active')
+						.eq(settings.currentSlide).addClass('active');
+				}
+
+				placeholder.animate(moveTo, settings.speed, function () {
+					carousel.data('busyAnimating', false);
+					sliderHeight(carousel);
+				});
+			} else {
+				setTimeout(function () {
+					moveToSlide(direction, num);
+				}, 100);
+			}
+		}
+
+		function onComplete (waitForAllImages, callback) {
+			var elems = carousel.add(carousel.find('img')).filter('img')
+			  , numberOfRemainingImages = elems.length;
+
+			if (!numberOfRemainingImages) {
+				callback();
+				return;
 			}
 
-			function onComplete (waitForAllImages, callback) {
-				var elems = carousel.add(carousel.find('img')).filter('img')
-				  , numberOfRemainingImages = elems.length;
+			elems.each(function () {
+				var that = this
+				  , jQueryThat 		= $(that)
+				  , events 			= 'load error'
+				  , loadFunction 	= function () {
+						jQueryThat.off(events, loadFunction);
 
-				if (!numberOfRemainingImages) {
-					callback();
-					return;
-				}
-
-				elems.each(function () {
-					var that = this
-					  , jQueryThat 		= $(that)
-					  , events 			= 'load error'
-					  , loadFunction 	= function () {
-							jQueryThat.off(events, loadFunction);
-
-							if (waitForAllImages) {
-								numberOfRemainingImages--;
-								if (numberOfRemainingImages == 0) {
-									callback();
-								}
-							} else {
+						if (waitForAllImages) {
+							numberOfRemainingImages--;
+							if (numberOfRemainingImages == 0) {
 								callback();
 							}
-						};
+						} else {
+							callback();
+						}
+					};
 
-					jQueryThat.on(events, loadFunction);
-					/*
-					 * Start ugly working IE fix.
-					 */
-					if (that.readyState == 'complete') {
-						jQueryThat.trigger('load');
-					} else if (that.readyState) {
-						// Sometimes IE doesn't fire the readystatechange, even though the readystate has been changed to complete. AARRGHH!! I HATE IE, I HATE IT, I HATE IE!
-						that.src = that.src; // Do not ask me why this works, ask the IE team!
-					}
-					/*
-					 * End ugly working IE fix.
-					 */
-					else if (that.complete) {
-						jQueryThat.trigger('load');
-					}
-					else if (that.complete === undefined) {
-						var src = that.src;
-						// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
-						// data uri bypasses webkit log warning (thx doug jones)
-						that.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
-						that.src = src;
-					}
-				});
-			}
+				jQueryThat.on(events, loadFunction);
+				/*
+				 * Start ugly working IE fix.
+				 */
+				if (that.readyState == 'complete') {
+					jQueryThat.trigger('load');
+				} else if (that.readyState) {
+					// Sometimes IE doesn't fire the readystatechange, even though the readystate has been changed to complete. AARRGHH!! I HATE IE, I HATE IT, I HATE IE!
+					that.src = that.src; // Do not ask me why this works, ask the IE team!
+				}
+				/*
+				 * End ugly working IE fix.
+				 */
+				else if (that.complete) {
+					jQueryThat.trigger('load');
+				}
+				else if (that.complete === undefined) {
+					var src = that.src;
+					// webkit hack from http://groups.google.com/group/jquery-dev/browse_thread/thread/eee6ab7b2da50e1f
+					// data uri bypasses webkit log warning (thx doug jones)
+					that.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+					that.src = src;
+				}
+			});
+		}
 
-			function touchHandler (event) {
-				var touch
-				  , xSwipe
-				  , ySwipe;
+		function touchHandler (event) {
+			var touch
+			  , xSwipe
+			  , ySwipe;
 
-				if (typeof event !== 'undefined'){	
-					// for vanilla javascript use event.touches
-					if (typeof event.originalEvent.touches !== 'undefined') {
-						touch = event.originalEvent.touches[0];
+			if (typeof event !== 'undefined'){	
+				// for vanilla javascript use event.touches
+				if (typeof event.originalEvent.touches !== 'undefined') {
+					touch = event.originalEvent.touches[0];
 
-						switch (event.originalEvent.type) {
-							case 'touchstart':
-								_touches[event.originalEvent.type].x = touch.pageX;
-								_touches[event.originalEvent.type].y = touch.pageY;
-								break;
-							case 'touchmove':
-								_touches[event.originalEvent.type].x = touch.pageX;
-								_touches[event.originalEvent.type].y = touch.pageY;
-								break;
-							case 'touchend':
-								if (!carousel.data('busyAnimating')) {
-									_touches[event.originalEvent.type] = true;
+					switch (event.originalEvent.type) {
+						case 'touchstart':
+							_touches[event.originalEvent.type].x = touch.pageX;
+							_touches[event.originalEvent.type].y = touch.pageY;
+							break;
+						case 'touchmove':
+							_touches[event.originalEvent.type].x = touch.pageX;
+							_touches[event.originalEvent.type].y = touch.pageY;
+							break;
+						case 'touchend':
+							if (!carousel.data('busyAnimating')) {
+								_touches[event.originalEvent.type] = true;
 
-									if (_touches.touchstart.x > -1 && _touches.touchmove.x > -1) {
-										xSwipe = Math.abs(_touches.touchstart.x - _touches.touchmove.x);
-										ySwipe = Math.abs(_touches.touchstart.y - _touches.touchmove.y);
+								if (_touches.touchstart.x > -1 && _touches.touchmove.x > -1) {
+									xSwipe = Math.abs(_touches.touchstart.x - _touches.touchmove.x);
+									ySwipe = Math.abs(_touches.touchstart.y - _touches.touchmove.y);
 
-										if (xSwipe > ySwipe && xSwipe > (getViewportWidthInCssPixels() * .33)) {
-											_touches.direction = _touches.touchstart.x < _touches.touchmove.x ? 'left' : 'right';
-											
-											if (_touches.direction === 'left') {
-												moveToSlide('prev');
-											} else if (_touches.direction === 'right') {
-												moveToSlide('next')
-											}
+									if (xSwipe > ySwipe && xSwipe > (getViewportWidthInCssPixels() * .33)) {
+										_touches.direction = _touches.touchstart.x < _touches.touchmove.x ? 'left' : 'right';
+										
+										if (_touches.direction === 'left') {
+											moveToSlide('prev');
+										} else if (_touches.direction === 'right') {
+											moveToSlide('next')
 										}
 									}
 								}
-								break;
-						}
+							}
+							break;
 					}
 				}
 			}
+		}
 
-			function init () {
-				createNav(carousel, settings.navigation);
+		function init () {
+			var items =  $('.item', carousel);
 
-				if (settings.responsive
-				&& settings.breakpoints.constructor === Array
-				&& settings.breakpoints.length) {
-					setBreakpoint(carousel);
-				} else {
-					onComplete(false, function () {
-						var items =  $('.item', carousel)
-						  , itemWidth = carousel.width()
-						  , placeholderWidth = items.length * itemWidth;
+			items.eq(settings.currentSlide).attr('aria-hidden', 'false');
+			items.not(':eq(' + settings.currentSlide + ')').attr('aria-hidden', 'true');
 
-						items.width(itemWidth);
-						$('.placeholder', carousel).width(placeholderWidth);
+			createNav(carousel, settings.navigation);
 
-						sliderHeight(carousel);
-					});
-				}
+			if (settings.responsive
+			&& settings.breakpoints.constructor === Array
+			&& settings.breakpoints.length) {
+				setBreakpoint(carousel);
+			} else {
+				onComplete(false, function () {
+					var itemWidth = carousel.width()
+					  , placeholderWidth = items.length * itemWidth;
 
-				if ('onComplete' in settings) onComplete(true, settings.onComplete);
+					items.width(itemWidth);
+					$('.placeholder', carousel).width(placeholderWidth);
 
-				//
-				// Events
-				//
-				carousel.on('click', '.navigate', function (e) {
-					e.preventDefault();
-
-					var num = $(e.currentTarget).index();
-					moveToSlide('goto', num);
+					sliderHeight(carousel);
 				});
-
-				if (supportsOrientationChange) {
-					//https://gist.github.com/localpcguy/1373518
-					carousel.on('touchstart touchmove touchend', function (e) {
-						touchHandler(e);
-						api.stopAuto();
-					});
-				} else {
-					carousel.on('click', '.prev, .next', function (e) {
-						e.preventDefault();
-						api.stopAuto();
-						moveToSlide(this.rel);
-					});
-				}
-
-				if (settings.responsive) {
-					$(window).on(orientationEvent, debounce(function () {
-						setBreakpoint(carousel);
-					}, 250));
-				}
 			}
 
-			function reinit () {
-				var items = $('.item', placeholder)
-				  , newWidth = items.length * items.eq(0).width();
-
-				options.currentSlide = items.length - 1;
-				placeholder.width(newWidth);
-			}
+			if ('onComplete' in settings) onComplete(true, settings.onComplete);
 
 			//
-			// Initialize
+			// Events
 			//
-			if ('ajax' in settings) {
-				$.ajax({
-					  url       : settings.ajax
-					, dataType  : 'json'
-				}).done(function (response) {
-					var elClone = $('.item', carousel).eq(0)
-					  , $clone
-					  , errorMessage = 'No slides found, or misformatted json response.';
+			carousel.on('click', '.navigate', function (e) {
+				e.preventDefault();
 
-					if ('slides' in response) {
-						$('.loading', carousel).remove();
+				var num = $(e.currentTarget).index();
+				moveToSlide('goto', num); // todo http://accessibility.athena-ict.com/aria/examples/carousel.shtml key events
+			});
 
-						for (var i = 0; i < response.slides.length; i++) {
-							$clone = elClone.clone();
-
-							for (var key in response.slides[i]) {
-								if (key === 'image') {
-									if (settings.responsive) {
-										$clone.attr('data-breakpoint', response.slides[i]['image'].path)
-											.attr('data-img',  response.slides[i]['image'].img);
-									} else {
-										$clone.find('img').attr('src', response.slides[i]['image'].path + response.slides[i]['image'].img)
-									}
-								} else {
-									$clone.find('.' + key).html(response.slides[i][key]);
-								}
-							}
-
-							placeholder.append($clone);
-							if (!('image' in response.slides[i])) {
-								$('.item', placeholder).last().find('img').remove();
-							}
-						}
-
-						$('.item', carousel).eq(0).remove();
-						init();
-					} else {
-						$('.loading', carousel).html(errorMessage);
-						return error(errorMessage);
-					}
+			if (supportsOrientationChange) {
+				//https://gist.github.com/localpcguy/1373518
+				carousel.on('touchstart touchmove touchend', function (e) {
+					touchHandler(e);
+					api.stopAuto();
 				});
 			} else {
-				init();
-			}	
+				carousel.on('click', '.prev, .next', function (e) {
+					e.preventDefault();
+					api.stopAuto();
+					moveToSlide(this.rel);
+				});
+			}
 
-			return api;
-		};
+			if (settings.responsive) {
+				$(window).on(orientationEvent, debounce(function () {
+					setBreakpoint(carousel);
+				}, 250));
+			}
+		}
+
+		function reinit () {
+			var items = $('.item', placeholder)
+			  , newWidth = items.length * items.eq(0).width();
+
+			options.currentSlide = items.length - 1;
+			placeholder.width(newWidth);
+		}
+
+		//
+		// Initialize
+		//
+		if ('ajax' in settings) {
+			$.ajax({
+				  url       : settings.ajax
+				, dataType  : 'json'
+			}).done(function (response) {
+				var elClone = $('.item', carousel).eq(0)
+				  , $clone
+				  , errorMessage = 'No slides found, or misformatted json response.';
+
+				if ('slides' in response) {
+					$('.loading', carousel).remove();
+
+					for (var i = 0; i < response.slides.length; i++) {
+						$clone = elClone.clone();
+
+						for (var key in response.slides[i]) {
+							if (key === 'image') {
+								if (settings.responsive) {
+									$clone.attr('data-breakpoint', response.slides[i]['image'].path)
+										.attr('data-img',  response.slides[i]['image'].img);
+								} else {
+									$clone.find('img').attr('src', response.slides[i]['image'].path + response.slides[i]['image'].img)
+								}
+							} else {
+								$clone.find('.' + key).html(response.slides[i][key]);
+							}
+						}
+
+						placeholder.append($clone);
+						if (!('image' in response.slides[i])) {
+							$('.item', placeholder).last().find('img').remove();
+						}
+					}
+
+					$('.item', carousel).eq(0).remove();
+					init();
+				} else {
+					$('.loading', carousel).html(errorMessage);
+					return error(errorMessage);
+				}
+			});
+		} else {
+			init();
+		}	
+
+		return api;
+	};
 	
 	$.fn.sliderBox = function (options, callback) {
-		 return this.each(function(key, value){
+		return this.each(function(key, value){
 			var carousel = $(this);
 			// Return early if this element already has a plugin instance
 			if (carousel.data('sliderBox')) return carousel.data('sliderBox');
 			var sliderBox = new SliderBox(this, options, callback);
 			carousel.data({
-				busyAnimating 	: false
-			  , sliderBox		: sliderBox
+				busyAnimating : false
+			, sliderBox			: sliderBox
 			});
-		 });
+		});
 	};
 	
 	$.fn.sliderBox.defaults = {
-		auto 				: false
+		auto 							: false
 	  , breakpoints 		: [
-			{folder: '480', maxWidth: 480}
+				{folder: '480', maxWidth: 480}
 		  , {folder: '640', minWidth: 481, maxWidth: 767}
 		  , {folder: '900', minWidth: 748} // tablet and desktop
 		  , {folder: '1170', minWidth: 992}
@@ -562,10 +582,12 @@
 		  , {folder: '2048', minWidth: 748, maxWidth: 1024, minDevicePixelRatio: 2} // tablet Retina display
 		  , {folder: '2048', minWidth: 414, maxWidth: 736, minDevicePixelRatio: 3} // iPhone 6 PLUS Retina display
 		]
-	  , currentSlide 		: 0
-	  , currentBreakpoint 	: 0
-	  , navigation			: false
-	  , responsive			: false
-	  , speed 				: 500
+	  , currentSlide 			: 0
+	  , currentBreakpoint : 0
+		, defaultBreakpoint	: {folder: '1170'} // todo documentation
+	  , navigation				: false
+	  , responsive				: false
+	  , speed 						: 500
 	};
+
 })(jQuery);
