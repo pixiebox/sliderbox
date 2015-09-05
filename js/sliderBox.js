@@ -473,7 +473,7 @@
 					carousel.on('click', '.navigate', function (e) {
 						e.preventDefault();
 
-						var num = $(e.currentTarget).index();
+						var num = $('.navigate', carousel).index(this);
 						moveToSlide('goto', num);
 					}).on('keypress', function (e) {
 						// manage focus and keyboard accessibility.
