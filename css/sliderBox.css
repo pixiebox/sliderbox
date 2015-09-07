@@ -22,6 +22,9 @@
 	top: 10px;
 	z-index: 2;
 }
+.placeholder {
+	height: 100%;
+}
 .sliderbox .item {
 	margin: 0;
 	float: left;
@@ -85,10 +88,10 @@
 	width: 14px;
 }
 .sliderbox .slider-nav.left {
-	left: 5px;
+	left: 0;
 }
 .sliderbox .slider-nav.right {
-	right: 5px;
+	right: 0;
 }
 .sliderbox .slider-nav.top {
 	top: 5px;
