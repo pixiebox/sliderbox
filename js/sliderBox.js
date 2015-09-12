@@ -409,14 +409,17 @@
 
 							switch (event.originalEvent.type) {
 								case 'touchstart':
+								case 'mousedown':
 									_touches[event.originalEvent.type].x = touch.pageX;
 									_touches[event.originalEvent.type].y = touch.pageY;
 									break;
 								case 'touchmove':
+								case 'mousemove':
 									_touches[event.originalEvent.type].x = touch.pageX;
 									_touches[event.originalEvent.type].y = touch.pageY;
 									break;
 								case 'touchend':
+								case 'mouseup':
 									if (!carousel.data('busyAnimating')) {
 										_touches[event.originalEvent.type] = true;
 
@@ -508,6 +511,10 @@
 							setBreakpoint(carousel);
 						}, 250));
 					}
+
+					$(window).on(orientationEvent, debounce(function () {
+						sliderHeight(carousel);
+					}, 250));
 				}
 
 				function reinit () {
