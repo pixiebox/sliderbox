@@ -78,18 +78,18 @@
 									return true;
 								}
 							, removeSlider: function removeSlider () {
-								carousel.remove();
-							}
+                  carousel.remove();
+                }
 							, startAuto : function startAuto () {
-								if (!'auto' in settings || !settings.auto) settings.auto = 3000;
+                  if (!'auto' in settings || !settings.auto) settings.auto = 3000;
 
-								interval = setInterval(function(){
-									moveToSlide('next')
-								}, settings.auto);
-							}
+                  interval = setInterval(function(){
+                    moveToSlide('next')
+                  }, settings.auto);
+                }
 							, stopAuto : function stopAuto () {
-								clearInterval(interval);
-							}
+                  clearInterval(interval);
+                }
 						}
 					// underscore debounce function
 					, debounce = function debounce(func, wait, immediate) {
@@ -269,6 +269,15 @@
 								carousel.append($sliderNav);
 							}
 						}
+          , gotoSlide = function gotoSlide (index) {
+              moveToSlide('goto', index);
+            }
+          , nextSlide = function nextSlide () {
+              moveToSlide('next');
+            }
+          , previousSlide = function nextSlide () {
+              moveToSlide('prev');
+            }
 					, removeSlider = function removeSlider (carousel) {
 							carousel.remove();
 						}
@@ -590,7 +599,7 @@
 	};
 	
 	$.fn.sliderBox.defaults = {
-		auto 							: false
+      auto 						: false
 	  , breakpoints 		: [
 				{folder: '480', maxWidth: 480}
 		  , {folder: '640', minWidth: 481, maxWidth: 767}
