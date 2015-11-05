@@ -1,0 +1,154 @@
+.sb-template {
+	box-shadow: 0px 10px 40px rgba(0,0,0,0.5);
+	bottom: 0;
+	left: 0;
+	margin: auto;
+	position: fixed;
+	right: 0;
+	top: 0;
+	z-index: 99;
+
+  .close-sliderbox {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    z-index: 2;
+  }
+}
+.sb-template .placeholder,
+.sliderbox .placeholder {
+	height: 100%;
+}
+.sliderbox {
+	background: #fff;
+	margin: 0 auto 24px;
+	max-height: 100vh;
+	min-height: 110px;
+	overflow: hidden;
+	position: relative;
+
+  .item {
+    margin: 0;
+    float: left;
+    position: relative;
+    text-align: center;
+  }
+  .loading {
+    background: #fff;
+    bottom: 0;
+    left: 0;
+    line-height: 160px;
+    margin: auto;
+    position: absolute;
+    right: 0;
+    text-align: center;
+    top: 0;
+    z-index: 2;
+  }
+  img {
+    width: 100%;
+  }
+   p {
+    padding: 14px;
+  }
+  a {
+    &:hover {
+      text-decoration: none;
+    }
+    &.prev,
+    &.next {
+      background: #222;
+      border: 3px solid #fff;
+      color: #fff;
+      font-size: 38px;
+      font-weight: 100;
+      height: 50px;
+      left: 10px;
+      line-height: 38px;
+      margin-top: -25px;
+      position: absolute;
+      text-align: center;
+      text-decoration: none;
+      top: 50%;
+      width: 50px;
+      z-index: 1;
+    }
+    &.next {
+      left: auto;
+      right: 0.25em
+    }
+  }
+  .slider-nav {
+    bottom: 0;
+    position: absolute;
+    text-align: center;
+    width: 100%;
+
+    ul {
+      list-style: none;
+    }
+    &.left,
+    &.right {
+      display: table;
+      height: 100%;
+      width: 14px;
+
+      li {
+        margin-bottom: 5px;
+      }
+    }
+    &.left {
+      left: 10px;
+    }
+    &.right {
+      right: 10px;
+    }
+    &.top {
+      top: 10px;
+
+      li {
+        margin-right: 5px;
+      }
+    }
+    &.bottom {
+      bottom: 10px;
+
+      li {
+        margin-right: 5px;
+      }
+    }
+    * {
+      line-height: normal;
+    }
+    &.left ul,
+    &.right ul {
+      height: 100%;
+      vertical-align: middle;
+      display: table-cell;
+    }
+    ul {
+      display: inline-block;
+      margin: 0;
+      padding: 0;
+    }
+    &.bottom li,
+    &.top li {
+      display: inline;
+      list-style: none;
+    }
+    a {
+      background: #000;
+      border-radius: 50%;
+      display: inline-block;
+      height: 14px;
+      margin: 0 5px;
+      text-indent: -9999px;
+      width: 14px;
+
+      &:hover,
+      &.active {
+        background: #ccc;
+      }
+    }
+  }
+}

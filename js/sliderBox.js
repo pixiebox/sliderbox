@@ -257,9 +257,18 @@
 
 					, createNav = function createNav (carousel, navigation) {
 							if (!navigation && !supportsOrientationChange) {
-								carousel.prepend('<nav aria-controls="carousel"><a href="#" class="prev" aria-label="previous" rel="prev">&lt;</a> <a href="#" class="next" rel="next" aria-label="next">&gt;</a></nav>');
+								carousel.prepend(
+                '<div aria-controls="carousel">' +
+                  '  <a href="#" class="prev" aria-label="previous" rel="prev">&lt;</a>' +
+                  '  <a href="#" class="next" rel="next" aria-label="next">&gt;</a>' +
+                  '</div>'
+                );
 							} else {
-								var $sliderNav = $('<nav class="slider-nav ' + navigation + '" aria-controls="carousel"><ul></ul></nav>'); 
+								var $sliderNav = $(
+                  '<div class="slider-nav ' + navigation + '" aria-controls="carousel">' +
+                  '  <ul></ul>' +
+                  '</div>'
+                ); 
 
 								for (var i = 0; i < $('.item', carousel).length; i++) {
 									$('ul', $sliderNav).append('<li><a class="navigate" href="#">' + i + '</a></li>');
