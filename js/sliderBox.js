@@ -32,7 +32,7 @@
 									, firstAdded;
 
 								if ('breakpoints' in settings) {
-									viewPortWidth 	= getViewportWidthInCssPixels();
+									viewPortWidth 	= getViewport().width;
 									breakpoint 		= getBreakpoint(settings.breakpoints, viewPortWidth);
 									breakpointVal = !api.isEmpty(breakpoint)
 										? breakpoint.folder - 0
@@ -119,37 +119,16 @@
 					 * - http://www.quirksmode.org/mobile/tableViewport.html
 					 * - https://github.com/h5bp/mobile-boilerplate/wiki/The-Markup
 					 */
-					, getViewportWidthInCssPixels = function getViewportWidthInCssPixels() {
-							var  i 			= 0
-								, math 		= Math
-								, screenWidth = window.screen.width
-								, widths 		= [
-									window.innerWidth
-									, window.document.documentElement.clientWidth
-									, window.document.documentElement.offsetWidth
-									, window.document.body.clientWidth
-								]
-								, width;
+					, getViewport = function getViewport () {
+              var el = window
+                , attr = 'inner';
 
-							for (; i < widths.length; i++) {
-								// If not a number remove it
-								if (isNaN(widths[i])) {
-									widths.splice(i, 1);
-									i--;
-								}
-							}
-
-							if (widths.length) {
-								width = math.max.apply(math, widths);
-
-								// Catch cases where the viewport is wider than the screen
-								if (!isNaN(screenWidth)) {
-									width = math.min(screenWidth, width);
-								}
-							}
-
-							return width || screenWidth || 0;
-						}
+              if (!('innerWidth' in window )) {
+                attr = 'client';
+                el = document.documentElement || document.body;
+              }
+              return {width : el[attr + 'Width'] , height : el[attr + 'Height']};
+            }
 
 					// https://gist.github.com/localpcguy/1373518
 					, setBreakpoint = function setBreakpoint(carousel) {
@@ -161,63 +140,55 @@
 								, placeholder
 								, viewPortWidth;
 
-							api.stopAuto();
+              viewPortWidth 		= getViewport().width;
+              breakpoint 				= getBreakpoint(settings.breakpoints, viewPortWidth);
+              elemWidth 				= carousel.parent().width();
+              placeholder 			= $('.placeholder', carousel);
+              elSlides 					= $('.item', placeholder);
+              settingBreakpoint = false;
 
-							if (!carousel.data('busyAnimating')) {
-								viewPortWidth 		= getViewportWidthInCssPixels();
-								breakpoint 				= getBreakpoint(settings.breakpoints, viewPortWidth);
-								elemWidth 				= carousel.parent().width();
-								placeholder 			= $('.placeholder', carousel);
-								elSlides 					= $('.item', placeholder);
-								settingBreakpoint = false;
+              breakpointVal = !api.isEmpty(breakpoint)
+                ? breakpoint.folder - 0
+                : elBreakpointVal = settings.defaultBreakpoint.folder;
 
-								breakpointVal = !api.isEmpty(breakpoint)
-									? breakpoint.folder - 0
-									: elBreakpointVal = settings.defaultBreakpoint.folder;
+              carousel.width(elemWidth); 
+              elSlides.width(elemWidth);
+              placeholder.css({
+                'marginLeft' 	: (0 - (elemWidth * settings.currentSlide))
+                , 'width' 		: (elemWidth * elSlides.length)
+              });
 
-								carousel.width(elemWidth); 
-								elSlides.width(elemWidth);
-								placeholder.css({
-									'marginLeft' 	: (0 - (elemWidth * settings.currentSlide))
-									, 'width' 		: (elemWidth * elSlides.length)
-								});
+              if (breakpointVal !== settings.currentBreakpoint) {
+                elSlides.each(function (index, el) {
+                  var elSlide			 	= $(el)
+                    , attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
+                    , slideImg 			= elSlide.find('img');
 
-								if (breakpointVal !== settings.currentBreakpoint) {
-									elSlides.each(function (index, el) {
-										var elSlide			 	= $(el)
-											, attrDataBreakpoint 	= elSlide.attr('data-breakpoint')
-											, slideImg 			= elSlide.find('img');
+                  if (slideImg.length) {
+                    if (index === settings.currentSlide) {
+                      slideImg.one('load', function () {
+                        sliderHeight(carousel);
+                      });
+                    }
 
-										if (slideImg.length) {
-											if (index === settings.currentSlide) {
-												slideImg.one('load', function () {
-													sliderHeight(carousel);
-												});
-											}
-
-											if (typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
-												slideImg.attr('src',
-													('path' in settings && settings.path === 'absolute' ? '/' : '')
-													+ (attrDataBreakpoint	+ this.getAttribute('data-img'))
-														.replace('{folder}', breakpointVal)
-												);
-											}
-										} else {
-											if (index === settings.currentSlide) sliderHeight(carousel);
-										}
-									});
-								
-									settings.currentBreakpoint = breakpointVal;
-								} else {
-									sliderHeight(carousel);
-								}
-								
-								if (settings.auto) api.startAuto();
-							} else {
-								setTimeout(function () {
-									setBreakpoint(carousel);
-								}, 250);
-							}
+                    if (typeof attrDataBreakpoint !== 'undefined' && attrDataBreakpoint !== false) {
+                      slideImg.attr('src',
+                        ('path' in settings && settings.path === 'absolute' ? '/' : '')
+                        + (attrDataBreakpoint	+ this.getAttribute('data-img'))
+                          .replace('{folder}', breakpointVal)
+                      );
+                    }
+                  } else {
+                    if (index === settings.currentSlide) sliderHeight(carousel);
+                  }
+                });
+              
+                settings.currentBreakpoint = breakpointVal;
+              } else {
+                sliderHeight(carousel);
+              }
+              
+              if (settings.auto) api.startAuto();
 						}
 
 					, getBreakpoint = function getBreakpoint(breakpoints, vWidth) {
@@ -445,7 +416,7 @@
 											xSwipe = Math.abs(_touches.touchstart.x - _touches.touchmove.x);
 											ySwipe = Math.abs(_touches.touchstart.y - _touches.touchmove.y);
 
-											if (xSwipe > ySwipe && xSwipe > (getViewportWidthInCssPixels() * .33)) {
+											if (xSwipe > ySwipe && xSwipe > (getViewport().width * .33)) {
 												_touches.direction = _touches.touchstart.x < _touches.touchmove.x ? 'left' : 'right';
 												
 												if (_touches.direction === 'left') {
@@ -522,12 +493,6 @@
 								e.preventDefault(); 
 							}
 						});
-					}
-
-					if (settings.responsive) {
-						$(window).on(orientationEvent, debounce(function () {
-							setBreakpoint(carousel);
-						}, 250));
 					}
 
 					$(window).on(orientationEvent, debounce(function () {
