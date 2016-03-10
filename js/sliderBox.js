@@ -560,7 +560,7 @@
 			};
 	
 	$.fn.sliderBox = function (options, callback) {
-		return this.each(function(key, value){
+		return this.each(function(){
 			var carousel = $(this);
 			// Return early if this element already has a plugin instance
 			if (carousel.data('sliderBox')) return carousel.data('sliderBox');
